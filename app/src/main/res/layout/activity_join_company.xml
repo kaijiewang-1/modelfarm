@@ -53,18 +53,36 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilCompanyCode"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:startIconDrawable="@drawable/ic_domain"
+        app:layout_constraintTop_toBottomOf="@id/tvJoinTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etCompanyCode"
+            android:hint="企业代码"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilCode"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:startIconDrawable="@drawable/ic_key"
-        app:layout_constraintTop_toBottomOf="@id/tvJoinTitle"
+        app:layout_constraintTop_toBottomOf="@id/tilCompanyCode"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etCode"
+            android:id="@+id/etInviteCode"
             android:hint="邀请码"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>

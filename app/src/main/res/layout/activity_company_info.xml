@@ -38,7 +38,7 @@
                     <ImageView
                         android:layout_width="56dp"
                         android:layout_height="56dp"
-                        android:src="@drawable/ic_company"  <!-- 修复：使用有效的图标资源 -->
+                        android:src="@drawable/ic_company"
                         android:contentDescription="企业图标" />
 
                 <TextView

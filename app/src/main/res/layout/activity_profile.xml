@@ -105,4 +105,9 @@
                         android:text="********" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

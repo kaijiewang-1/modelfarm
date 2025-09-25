@@ -42,7 +42,7 @@
             android:layout_width="90dp"
             android:layout_height="90dp"
             android:layout_marginTop="16dp"
-            android:src="@drawable/ic_store_add"  <!-- 自备: 店铺+ 图标 -->
+            android:src="@drawable/ic_store_add"
         app:tint="@color/green_700"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintStart_toStartOf="parent"
@@ -101,6 +101,7 @@
                     app:startIconDrawable="@drawable/ic_domain">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etCompanyName"
                         android:hint="企业名称 *"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
@@ -114,6 +115,7 @@
                     app:startIconDrawable="@drawable/ic_location_on">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etCompanyAddress"
                         android:hint="企业地址 *"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
@@ -127,6 +129,7 @@
                     app:startIconDrawable="@drawable/ic_person">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etContactPerson"
                         android:hint="联系人 *"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
@@ -140,6 +143,7 @@
                     app:startIconDrawable="@drawable/ic_phone">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etContactPhone"
                         android:hint="联系电话 *"
                         android:inputType="phone"
                         android:layout_width="match_parent"

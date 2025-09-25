@@ -7,4 +7,16 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Green colors for the app theme -->
+    <color name="green_30">#E8F5E8</color>
+    <color name="green_50">#E8F5E8</color>
+    <color name="green_700">#2E7D32</color>
+    <color name="green_800">#1B5E20</color>
+    
+    <!-- Gray colors -->
+    <color name="gray_600">#757575</color>
+    
+    <!-- Material dynamic colors -->
+    <color name="material_dynamic_primary">#4CAF50</color>
 </resources>

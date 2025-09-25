@@ -22,7 +22,7 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_marginTop="28dp"
-        android:src="@drawable/ic_building"  <!-- 自备: 楼房图标 -->
+        android:src="@drawable/ic_building"
         app:tint="@color/green_700"
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
         app:layout_constraintStart_toStartOf="parent"
@@ -64,6 +64,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <Button
+        android:id="@+id/btnSkip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="跳过，直接使用"
+        android:textColor="@color/green_800"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toBottomOf="@id/btnJoinCompany"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <TextView
         android:id="@+id/tvLogout"
         android:layout_width="wrap_content"
@@ -71,7 +83,7 @@
         android:layout_marginTop="16dp"
         android:text="退出登录"
         android:textColor="@color/green_800"
-        app:layout_constraintTop_toBottomOf="@id/btnJoinCompany"
+        app:layout_constraintTop_toBottomOf="@id/btnSkip"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
