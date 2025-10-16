@@ -78,30 +78,43 @@ public class farm_list extends AppCompatActivity {
     private void loadFarmData() {
         // 模拟农场数据
         farmList.clear();
-        farmList.add(new Farm("北方一号农场", "北京市朝阳区", "500亩", "主要种植蔬菜"));
-        farmList.add(new Farm("南方二号农场", "上海市浦东区", "300亩", "主要种植水果"));
-        farmList.add(new Farm("西部三号农场", "成都市双流区", "800亩", "主要种植粮食"));
+        farmList.add(new Farm("北方一号农场", "北京市朝阳区", "500亩", "主要种植蔬菜", "智能温室", "正常", "25°C", "65%"));
+        farmList.add(new Farm("南方二号农场", "上海市浦东区", "300亩", "主要种植水果", "露天种植", "正常", "28°C", "70%"));
+        farmList.add(new Farm("西部三号农场", "成都市双流区", "800亩", "主要种植粮食", "大田种植", "正常", "22°C", "60%"));
         
         farmAdapter.notifyDataSetChanged();
     }
 
     // 农场数据模型
     public static class Farm {
-        private String name;
-        private String location;
-        private String area;
-        private String description;
+        private final String name;
+        private final String location;
+        private final String area;
+        private final String description;
+        private final String type;
+        private final String status;
+        private final String temperature;
+        private final String humidity;
 
-        public Farm(String name, String location, String area, String description) {
+        public Farm(String name, String location, String area, String description, 
+                   String type, String status, String temperature, String humidity) {
             this.name = name;
             this.location = location;
             this.area = area;
             this.description = description;
+            this.type = type;
+            this.status = status;
+            this.temperature = temperature;
+            this.humidity = humidity;
         }
 
         public String getName() { return name; }
         public String getLocation() { return location; }
         public String getArea() { return area; }
         public String getDescription() { return description; }
+        public String getType() { return type; }
+        public String getStatus() { return status; }
+        public String getTemperature() { return temperature; }
+        public String getHumidity() { return humidity; }
     }
 }

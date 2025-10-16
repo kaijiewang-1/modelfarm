@@ -3,7 +3,6 @@ package personal;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -15,13 +14,17 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 
 public class profile extends AppCompatActivity {
 
     private MaterialToolbar toolbar;
-    private EditText etNickname;
-    private EditText etPhone;
-    private EditText etPassword;
+    private TextView tvUserName;
+    private TextView tvUserEmail;
+    private TextView tvUserPhone;
+    private MaterialButton btnEditProfile;
+    private MaterialButton btnChangePassword;
+    private MaterialButton btnLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,13 +35,18 @@ public class profile extends AppCompatActivity {
         initViews();
         setupToolbar();
         loadUserData();
+        setupClickListeners();
     }
 
     private void initViews() {
         toolbar = findViewById(R.id.toolbar);
-        etNickname = findViewById(R.id.et_nickname);
-        etPhone = findViewById(R.id.et_phone);
-        etPassword = findViewById(R.id.et_password);
+        tvUserName = findViewById(R.id.tv_user_name);
+        // 暂时注释掉不存在的资源引用
+        // tvUserEmail = findViewById(R.id.tv_user_email);
+        // tvUserPhone = findViewById(R.id.tv_user_phone);
+        // btnEditProfile = findViewById(R.id.btn_edit_profile);
+        // btnChangePassword = findViewById(R.id.btn_change_password);
+        // btnLogout = findViewById(R.id.btn_logout);
     }
 
     private void setupToolbar() {
@@ -55,8 +63,13 @@ public class profile extends AppCompatActivity {
 
     private void loadUserData() {
         // 模拟用户数据
-        etNickname.setText("张三");
-        etPhone.setText("13800138001");
-        etPassword.setText("********");
+        tvUserName.setText("张先生");
+        // tvUserEmail.setText("zhang@example.com");
+        // tvUserPhone.setText("13800138000");
+    }
+
+    private void setupClickListeners() {
+        // 暂时注释掉不存在的按钮点击事件
+        // 这些功能将在布局文件创建后启用
     }
 }

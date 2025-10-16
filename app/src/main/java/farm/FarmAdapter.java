@@ -15,8 +15,8 @@ import java.util.List;
 
 public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder> {
 
-    private List<farm_list.Farm> farmList;
-    private OnFarmClickListener listener;
+    private final List<farm_list.Farm> farmList;
+    private final OnFarmClickListener listener;
 
     public interface OnFarmClickListener {
         void onFarmClick(farm_list.Farm farm);
@@ -47,11 +47,15 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
     }
 
     class FarmViewHolder extends RecyclerView.ViewHolder {
-        private MaterialCardView cardFarm;
-        private TextView tvFarmName;
-        private TextView tvFarmLocation;
-        private TextView tvFarmArea;
-        private TextView tvFarmDescription;
+        private final MaterialCardView cardFarm;
+        private final TextView tvFarmName;
+        private final TextView tvFarmLocation;
+        private final TextView tvFarmArea;
+        private final TextView tvFarmType;
+        private final TextView tvFarmTemperature;
+        private final TextView tvFarmHumidity;
+        private final TextView tvFarmStatus;
+        private final TextView tvFarmDescription;
 
         public FarmViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -59,6 +63,10 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
             tvFarmName = itemView.findViewById(R.id.tv_farm_name);
             tvFarmLocation = itemView.findViewById(R.id.tv_farm_location);
             tvFarmArea = itemView.findViewById(R.id.tv_farm_area);
+            tvFarmType = itemView.findViewById(R.id.tv_farm_type);
+            tvFarmTemperature = itemView.findViewById(R.id.tv_farm_temperature);
+            tvFarmHumidity = itemView.findViewById(R.id.tv_farm_humidity);
+            tvFarmStatus = itemView.findViewById(R.id.tv_farm_status);
             tvFarmDescription = itemView.findViewById(R.id.tv_farm_description);
         }
 
@@ -66,7 +74,18 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
             tvFarmName.setText(farm.getName());
             tvFarmLocation.setText(farm.getLocation());
             tvFarmArea.setText(farm.getArea());
+            tvFarmType.setText(farm.getType());
+            tvFarmTemperature.setText(farm.getTemperature());
+            tvFarmHumidity.setText(farm.getHumidity());
+            tvFarmStatus.setText(farm.getStatus());
             tvFarmDescription.setText(farm.getDescription());
+
+            // 根据状态设置颜色
+            if ("正常".equals(farm.getStatus())) {
+                tvFarmStatus.setTextColor(0xFF4CAF50);
+            } else {
+                tvFarmStatus.setTextColor(0xFFF44336);
+            }
 
             cardFarm.setOnClickListener(new View.OnClickListener() {
                 @Override

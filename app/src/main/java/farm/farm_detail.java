@@ -115,10 +115,10 @@ public class farm_detail extends AppCompatActivity {
 
     // 农场点数据模型
     public static class FarmPoint {
-        private String name;
-        private String area;
-        private String crop;
-        private String buildTime;
+        private final String name;
+        private final String area;
+        private final String crop;
+        private final String buildTime;
 
         public FarmPoint(String name, String area, String crop, String buildTime) {
             this.name = name;

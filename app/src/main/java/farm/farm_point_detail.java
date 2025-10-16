@@ -32,7 +32,7 @@ public class farm_point_detail extends AppCompatActivity {
     private TextView tvTotalDevices;
     private TextView tvOnlineDevices;
     private TextView tvOfflineDevices;
-    private MaterialButton btnAddDevice;
+    // private MaterialButton btnAddDevice; // 暂时注释掉未使用的变量
     private RecyclerView rvDevices;
     private DeviceAdapter deviceAdapter;
     private List<DeviceManagementActivity.Device> deviceList;
@@ -59,7 +59,7 @@ public class farm_point_detail extends AppCompatActivity {
         tvTotalDevices = findViewById(R.id.tv_total_devices);
         tvOnlineDevices = findViewById(R.id.tv_online_devices);
         tvOfflineDevices = findViewById(R.id.tv_offline_devices);
-        btnAddDevice = findViewById(R.id.btn_add_device);
+        // btnAddDevice = findViewById(R.id.btn_add_device); // 已注释掉
         rvDevices = findViewById(R.id.rv_devices);
     }
 
