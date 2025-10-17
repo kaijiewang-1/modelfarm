@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -63,7 +64,13 @@ public class DeviceManagementActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         deviceList = new ArrayList<>();
-        deviceAdapter = new DeviceAdapter(deviceList);
+        deviceAdapter = new DeviceAdapter(deviceList, new DeviceAdapter.OnDeviceClickListener() {
+            @Override
+            public void onDeviceClick(Device device) {
+                // 处理设备点击事件
+                Toast.makeText(DeviceManagementActivity.this, "点击了设备: " + device.getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
         rvDevices.setLayoutManager(new LinearLayoutManager(this));
         rvDevices.setAdapter(deviceAdapter);
     }

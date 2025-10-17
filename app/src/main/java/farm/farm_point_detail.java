@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -75,7 +76,13 @@ public class farm_point_detail extends AppCompatActivity {
 
     private void setupRecyclerView() {
         deviceList = new ArrayList<>();
-        deviceAdapter = new DeviceAdapter(deviceList);
+        deviceAdapter = new DeviceAdapter(deviceList, new DeviceAdapter.OnDeviceClickListener() {
+            @Override
+            public void onDeviceClick(com.example.modelfarm.DeviceManagementActivity.Device device) {
+                // 处理设备点击事件
+                Toast.makeText(farm_point_detail.this, "点击了设备: " + device.getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
         rvDevices.setLayoutManager(new LinearLayoutManager(this));
         rvDevices.setAdapter(deviceAdapter);
     }

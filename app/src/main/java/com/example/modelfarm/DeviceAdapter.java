@@ -17,9 +17,15 @@ import java.util.List;
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder> {
 
     private List<DeviceManagementActivity.Device> deviceList;
+    private OnDeviceClickListener listener;
 
-    public DeviceAdapter(List<DeviceManagementActivity.Device> deviceList) {
+    public interface OnDeviceClickListener {
+        void onDeviceClick(DeviceManagementActivity.Device device);
+    }
+
+    public DeviceAdapter(List<DeviceManagementActivity.Device> deviceList, OnDeviceClickListener listener) {
         this.deviceList = deviceList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -33,7 +39,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
     @Override
     public void onBindViewHolder(@NonNull DeviceViewHolder holder, int position) {
         DeviceManagementActivity.Device device = deviceList.get(position);
-        holder.bind(device);
+        holder.bind(device, listener);
     }
 
     @Override
@@ -57,7 +63,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             tvDeviceValue = itemView.findViewById(R.id.tv_device_value);
         }
 
-        public void bind(DeviceManagementActivity.Device device) {
+        public void bind(DeviceManagementActivity.Device device, OnDeviceClickListener listener) {
             ivDeviceIcon.setImageResource(device.getIconRes());
             tvDeviceName.setText(device.getName());
             tvDeviceStatus.setText(device.getStatus());
@@ -69,6 +75,16 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             } else {
                 tvDeviceStatus.setTextColor(itemView.getContext().getResources().getColor(android.R.color.holo_red_dark));
             }
+
+            // 设置点击监听器
+            cardDevice.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onDeviceClick(device);
+                    }
+                }
+            });
         }
     }
 }
