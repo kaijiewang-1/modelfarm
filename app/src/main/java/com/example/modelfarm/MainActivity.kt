@@ -2,6 +2,7 @@ package com.example.modelfarm
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,10 +20,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // 直接跳转到登录页面
-        val intent = Intent(this, login.login::class.java)
-        startActivity(intent)
-        finish()
+        try {
+            // 直接跳转到登录页面
+            val intent = Intent(this, login.login::class.java)
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            Toast.makeText(this, "应用启动失败: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
+        }
     }
 }
 

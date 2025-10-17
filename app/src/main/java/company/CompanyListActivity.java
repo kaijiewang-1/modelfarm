@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import com.google.android.material.button.MaterialButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,9 +38,9 @@ public class CompanyListActivity extends AppCompatActivity {
     private ImageView ivBuilding;
     private RecyclerView rvCompanyList;
     private MaterialCardView cardNoCompany;
-    private Button btnJoinCompany;
-    private Button btnCreateCompany;
-    private Button btnLogout;
+    private MaterialButton btnJoinCompany;
+    private MaterialButton btnCreateCompany;
+    private TextView btnLogout;
 
     private List<Company> companyList = new ArrayList<>();
     private CompanyAdapter adapter;

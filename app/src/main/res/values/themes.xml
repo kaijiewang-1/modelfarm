@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Modelfarm" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Modelfarm" parent="Theme.MaterialComponents.Light.NoActionBar" />
     
     <style name="ShapeAppearanceOverlay.Material3.Corner.Full" parent="">
         <item name="cornerSize">50%</item>

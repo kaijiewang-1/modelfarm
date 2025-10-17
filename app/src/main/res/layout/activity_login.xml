@@ -71,7 +71,7 @@
         <!-- 用户名/手机号输入 -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPhone"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="手机号或用户名"
@@ -95,7 +95,7 @@
         <!-- 密码输入 -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPassword"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="密码"

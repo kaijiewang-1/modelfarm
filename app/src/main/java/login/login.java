@@ -56,15 +56,21 @@ public class login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_login);
+        
+        try {
+            EdgeToEdge.enable(this);
+            setContentView(R.layout.activity_login);
 
-        initViews();
-        initAnimations();
-        loadSavedCredentials();
-        setupClickListeners();
-        setupUI();
-        setupTextWatchers();
+            initViews();
+            initAnimations();
+            loadSavedCredentials();
+            setupClickListeners();
+            setupUI();
+            setupTextWatchers();
+        } catch (Exception e) {
+            android.util.Log.e("LoginActivity", "Error in onCreate: " + e.getMessage(), e);
+            Toast.makeText(this, "应用初始化失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void initViews() {
@@ -83,9 +89,16 @@ public class login extends AppCompatActivity {
     }
 
     private void initAnimations() {
-        // 初始化动画
-        shakeAnimation = AnimationUtils.loadAnimation(this, R.anim.shake);
-        fadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        try {
+            // 初始化动画
+            shakeAnimation = AnimationUtils.loadAnimation(this, R.anim.shake);
+            fadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        } catch (Exception e) {
+            // 如果动画加载失败，创建简单的动画
+            android.util.Log.e("LoginActivity", "Failed to load animations: " + e.getMessage());
+            shakeAnimation = null;
+            fadeInAnimation = null;
+        }
     }
 
     private void loadSavedCredentials() {
@@ -151,7 +164,9 @@ public class login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 添加按钮点击动画
-                v.startAnimation(fadeInAnimation);
+                if (fadeInAnimation != null) {
+                    v.startAnimation(fadeInAnimation);
+                }
                 performLogin();
             }
         });
@@ -160,7 +175,9 @@ public class login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 添加点击动画
-                v.startAnimation(fadeInAnimation);
+                if (fadeInAnimation != null) {
+                    v.startAnimation(fadeInAnimation);
+                }
                 Intent intent = new Intent(login.this, register.class);
                 startActivity(intent);
                 // 添加页面切换动画
@@ -172,7 +189,9 @@ public class login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 添加点击动画
-                v.startAnimation(fadeInAnimation);
+                if (fadeInAnimation != null) {
+                    v.startAnimation(fadeInAnimation);
+                }
                 clearInputs();
             }
         });
@@ -181,7 +200,9 @@ public class login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 添加点击动画
-                v.startAnimation(fadeInAnimation);
+                if (fadeInAnimation != null) {
+                    v.startAnimation(fadeInAnimation);
+                }
                 showForgotPasswordDialog();
             }
         });
@@ -272,6 +293,10 @@ public class login extends AppCompatActivity {
      * 实时验证输入格式
      */
     private void validateInputFormat() {
+        if (etPhone == null || etPassword == null || btnLogin == null) {
+            return; // 如果UI组件未初始化，直接返回
+        }
+        
         String phone = etPhone.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
         
@@ -288,7 +313,7 @@ public class login extends AppCompatActivity {
     private void showErrorWithAnimation(String message) {
         Toast.makeText(login.this, message, Toast.LENGTH_SHORT).show();
         // 添加震动动画
-        if (shakeAnimation != null) {
+        if (shakeAnimation != null && etPhone != null) {
             etPhone.startAnimation(shakeAnimation);
         }
     }
@@ -341,8 +366,13 @@ public class login extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // 页面恢复时重新验证输入
-        validateInputFormat();
+        // 页面恢复时重新验证输入（延迟执行确保UI已初始化）
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                validateInputFormat();
+            }
+        }, 100);
     }
 
     @Override

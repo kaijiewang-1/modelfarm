@@ -16,11 +16,10 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/material_dynamic_primary"
-            app:title="环境监控"
-            app:titleTextColor="@android:color/white"
+            android:background="@android:color/transparent"
+            app:title=""
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="@android:color/white" />
+            app:navigationIconTint="#4CAF50" />
 
         <!-- 实时数据卡片 -->
         <com.google.android.material.card.MaterialCardView
