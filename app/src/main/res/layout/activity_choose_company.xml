@@ -42,7 +42,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCreateCompany"
-        style="@style/Widget.Material3.Button.TonalButton"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="20dp"
@@ -54,7 +54,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnJoinCompany"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_marginTop="12dp"

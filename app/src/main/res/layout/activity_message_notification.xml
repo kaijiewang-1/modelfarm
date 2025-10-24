@@ -102,7 +102,7 @@
         <!-- 全部已读按钮 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnMarkAllRead"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:text="全部已读"

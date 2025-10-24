@@ -17,17 +17,32 @@ import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.services.EnterpriseApiService;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.EnterpriseFarm;
+import com.example.modelfarm.network.models.EnterpriseUser;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class farm_list extends AppCompatActivity {
 
     private MaterialToolbar toolbar;
     private MaterialButton btnAddFarm;
+    private MaterialButton btnShowJson;
     private RecyclerView rvFarms;
     private FarmAdapter farmAdapter;
     private List<Farm> farmList;
+    private final Map<Integer, String> userIdToName = new HashMap<>();
+    
+    // API相关
+    private EnterpriseApiService enterpriseApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +51,23 @@ public class farm_list extends AppCompatActivity {
         setContentView(R.layout.activity_farm_list);
 
         initViews();
+        initApiComponents();
         setupToolbar();
         setupRecyclerView();
-        loadFarmData();
+        loadEnterpriseUsers();
+    }
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        enterpriseApi = RetrofitClient.create(this, EnterpriseApiService.class);
     }
 
     private void initViews() {
         toolbar = findViewById(R.id.toolbar);
         btnAddFarm = findViewById(R.id.btn_add_farm);
+        btnShowJson = findViewById(R.id.btn_show_farms_json);
         rvFarms = findViewById(R.id.rv_farms);
     }
 
@@ -64,8 +88,8 @@ public class farm_list extends AppCompatActivity {
         farmAdapter = new FarmAdapter(farmList, new FarmAdapter.OnFarmClickListener() {
             @Override
             public void onFarmClick(Farm farm) {
-                // 点击农场，跳转到农场详情
                 Intent intent = new Intent(farm_list.this, farm_detail.class);
+                intent.putExtra("farm_id", farm.getId());
                 intent.putExtra("farm_name", farm.getName());
                 intent.putExtra("farm_location", farm.getLocation());
                 startActivity(intent);
@@ -75,18 +99,112 @@ public class farm_list extends AppCompatActivity {
         rvFarms.setAdapter(farmAdapter);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (btnShowJson != null) {
+            btnShowJson.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showFarmsJsonDialog();
+                }
+            });
+        }
+    }
+
+    /**
+     * 先加载企业用户，建立 supervisorId -> username 映射
+     */
+    private void loadEnterpriseUsers() {
+        enterpriseApi.getEnterpriseUsers().enqueue(new Callback<ApiResponse<List<EnterpriseUser>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<EnterpriseUser>>> call, Response<ApiResponse<List<EnterpriseUser>>> response) {
+                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                    userIdToName.clear();
+                    for (EnterpriseUser u: response.body().getData()) {
+                        userIdToName.put(u.getId(), u.getUsername());
+                    }
+                }
+                loadFarmData();
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<List<EnterpriseUser>>> call, Throwable t) {
+                userIdToName.clear();
+                loadFarmData();
+            }
+        });
+    }
+
     private void loadFarmData() {
-        // 模拟农场数据
-        farmList.clear();
-        farmList.add(new Farm("北方一号农场", "北京市朝阳区", "500亩", "主要种植蔬菜", "智能温室", "正常", "25°C", "65%"));
-        farmList.add(new Farm("南方二号农场", "上海市浦东区", "300亩", "主要种植水果", "露天种植", "正常", "28°C", "70%"));
-        farmList.add(new Farm("西部三号农场", "成都市双流区", "800亩", "主要种植粮食", "大田种植", "正常", "22°C", "60%"));
-        
-        farmAdapter.notifyDataSetChanged();
+        enterpriseApi.getEnterpriseFarms().enqueue(new Callback<ApiResponse<List<EnterpriseFarm>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<EnterpriseFarm>>> call, Response<ApiResponse<List<EnterpriseFarm>>> response) {
+                runOnUiThread(() -> {
+                    farmList.clear();
+                    if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
+                        List<EnterpriseFarm> apiList = response.body().getData();
+                        for (EnterpriseFarm apiFarm : apiList) {
+                            farmList.add(convertApiFarmToLocal(apiFarm));
+                        }
+                    } else {
+                        Toast.makeText(farm_list.this, "获取农场数据失败: " + (response.body()!=null?response.body().getMessage():"接口异常"), Toast.LENGTH_LONG).show();
+                    }
+                    farmAdapter.notifyDataSetChanged();
+                });
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<List<EnterpriseFarm>>> call, Throwable t) {
+                runOnUiThread(() -> {
+                    Toast.makeText(farm_list.this, "获取农场数据失败: 网络异常", Toast.LENGTH_LONG).show();
+                    farmList.clear();
+                    farmAdapter.notifyDataSetChanged();
+                });
+            }
+        });
+    }
+    
+    /**
+     * 将API农场数据适配为本地Farm（适配你的原UI模型）
+     */
+    private Farm convertApiFarmToLocal(com.example.modelfarm.network.models.EnterpriseFarm apiFarm) {
+        String area = "-";
+        String type = getFarmTypeDisplay(1);
+        String status = getFarmStatusDisplay(1);
+        String supervisor = userIdToName.containsKey(apiFarm.getSupervisorId()) ? userIdToName.get(apiFarm.getSupervisorId()) : "-";
+        return new Farm(
+            apiFarm.getId(),
+            apiFarm.getName(),
+            apiFarm.getAddress(),
+            area,
+            "负责人: " + supervisor,
+            type,
+            status,
+            "--",
+            "--"
+        );
+    }
+    
+    private String getFarmTypeDisplay(int type) {
+        switch (type) {
+            case 1: return "养殖场";
+            case 2: return "种植园";
+            case 3: return "混合农场";
+            default: return "未知";
+        }
+    }
+    
+    private String getFarmStatusDisplay(int status) {
+        switch (status) {
+            case 1: return "正常运营";
+            case 0: return "暂停运营";
+            case -1: return "已关闭";
+            default: return "未知状态";
+        }
     }
 
     // 农场数据模型
     public static class Farm {
+        private final int id;
         private final String name;
         private final String location;
         private final String area;
@@ -96,8 +214,9 @@ public class farm_list extends AppCompatActivity {
         private final String temperature;
         private final String humidity;
 
-        public Farm(String name, String location, String area, String description, 
+        public Farm(int id, String name, String location, String area, String description, 
                    String type, String status, String temperature, String humidity) {
+            this.id = id;
             this.name = name;
             this.location = location;
             this.area = area;
@@ -108,6 +227,7 @@ public class farm_list extends AppCompatActivity {
             this.humidity = humidity;
         }
 
+        public int getId() { return id; }
         public String getName() { return name; }
         public String getLocation() { return location; }
         public String getArea() { return area; }
@@ -116,5 +236,37 @@ public class farm_list extends AppCompatActivity {
         public String getStatus() { return status; }
         public String getTemperature() { return temperature; }
         public String getHumidity() { return humidity; }
+    }
+
+    private void showFarmsJsonDialog() {
+        try {
+            com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
+            String json = gson.toJson(farmList);
+            android.widget.ScrollView scroll = new android.widget.ScrollView(this);
+            android.widget.TextView tv = new android.widget.TextView(this);
+            tv.setTextIsSelectable(true);
+            tv.setText(json);
+            tv.setTextSize(12);
+            int pad = (int) (getResources().getDisplayMetrics().density * 16);
+            tv.setPadding(pad, pad, pad, pad);
+            scroll.addView(tv);
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("农场原始JSON")
+                .setView(scroll)
+                .setNegativeButton("关闭", null)
+                .setPositiveButton("复制", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        if (cm != null) {
+                            cm.setPrimaryClip(android.content.ClipData.newPlainText("farms_json", json));
+                            android.widget.Toast.makeText(farm_list.this, "已复制", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .show();
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "展示失败", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 }

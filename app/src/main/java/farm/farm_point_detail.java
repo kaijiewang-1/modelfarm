@@ -14,7 +14,16 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.modelfarm.DeviceManagementActivity;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.services.FarmSiteApiService;
+import com.example.modelfarm.network.services.FarmApiService;
+import com.example.modelfarm.network.services.DeviceApiService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import com.example.modelfarm.network.models.Device;
 import com.example.modelfarm.DeviceAdapter;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -36,7 +45,8 @@ public class farm_point_detail extends AppCompatActivity {
     // private MaterialButton btnAddDevice; // 暂时注释掉未使用的变量
     private RecyclerView rvDevices;
     private DeviceAdapter deviceAdapter;
-    private List<DeviceManagementActivity.Device> deviceList;
+    private List<Device> deviceList;
+    private int farmSiteId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +88,7 @@ public class farm_point_detail extends AppCompatActivity {
         deviceList = new ArrayList<>();
         deviceAdapter = new DeviceAdapter(deviceList, new DeviceAdapter.OnDeviceClickListener() {
             @Override
-            public void onDeviceClick(com.example.modelfarm.DeviceManagementActivity.Device device) {
-                // 处理设备点击事件
+            public void onDeviceClick(Device device) {
                 Toast.makeText(farm_point_detail.this, "点击了设备: " + device.getName(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -88,50 +97,67 @@ public class farm_point_detail extends AppCompatActivity {
     }
 
     private void loadPointData() {
-        // 从Intent获取农场点信息
         Intent intent = getIntent();
         String pointName = intent.getStringExtra("point_name");
         String pointArea = intent.getStringExtra("point_area");
         String pointCrop = intent.getStringExtra("point_crop");
-        
-        if (pointName != null) {
-            tvPointName.setText(pointName);
+        farmSiteId = intent.getIntExtra("farm_site_id", -1);
+        if (farmSiteId > 0) {
+            FarmSiteApiService api = RetrofitClient.create(this, FarmSiteApiService.class);
+            api.getFarmSite(farmSiteId).enqueue(new Callback<ApiResponse<com.example.modelfarm.network.models.FarmSite>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<com.example.modelfarm.network.models.FarmSite>> call, Response<ApiResponse<com.example.modelfarm.network.models.FarmSite>> response) {
+                    if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                        com.example.modelfarm.network.models.FarmSite s = response.body().getData();
+                        tvPointName.setText(s.getName());
+                        tvArea.setText("容量：" + (s.getProperties()!=null && s.getProperties().get("capacity")!=null ? String.valueOf(s.getProperties().get("capacity")) : "-"));
+                        tvCrop.setText("类型：" + (s.getProperties()!=null && s.getProperties().get("type")!=null ? String.valueOf(s.getProperties().get("type")) : "-"));
+                        tvTime.setText("创建时间：" + s.getCreatedAt());
+                    }
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<com.example.modelfarm.network.models.FarmSite>> call, Throwable t) { }
+            });
+        } else {
+            if (pointName != null) tvPointName.setText(pointName);
+            if (pointArea != null) tvArea.setText("面积：" + pointArea);
+            if (pointCrop != null) tvCrop.setText("种植作物：" + pointCrop);
+            tvTime.setText("建成时间：-");
         }
-        if (pointArea != null) {
-            tvArea.setText("面积：" + pointArea);
-        }
-        if (pointCrop != null) {
-            tvCrop.setText("种植作物：" + pointCrop);
-        }
-        
-        // 设置其他信息
-        tvTime.setText("建成时间：2023年3月");
     }
 
     private void loadDeviceData() {
-        // 模拟设备数据
         deviceList.clear();
-        deviceList.add(new DeviceManagementActivity.Device("温度传感器-001", "在线", "25.5°C", R.drawable.ic_thermometer));
-        deviceList.add(new DeviceManagementActivity.Device("湿度传感器-002", "在线", "65%", R.drawable.ic_humidity));
-        deviceList.add(new DeviceManagementActivity.Device("光照传感器-003", "离线", "无数据", R.drawable.ic_light));
-        deviceList.add(new DeviceManagementActivity.Device("通风设备-004", "在线", "运行中", R.drawable.ic_fan));
-        deviceList.add(new DeviceManagementActivity.Device("加热设备-005", "在线", "待机", R.drawable.ic_heater));
+        if (farmSiteId <= 0) {
+            deviceAdapter.notifyDataSetChanged();
+        } else {
+            FarmSiteApiService api = RetrofitClient.create(this, FarmSiteApiService.class);
+            api.getFarmSiteDevices(farmSiteId).enqueue(new Callback<ApiResponse<java.util.List<Device>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<java.util.List<Device>>> call, Response<ApiResponse<java.util.List<Device>>> response) {
+                    deviceList.clear();
+                    if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                        deviceList.addAll(response.body().getData());
+                    }
+                    deviceAdapter.notifyDataSetChanged();
+                    updateStats();
+                }
+                @Override
+                public void onFailure(Call<ApiResponse<java.util.List<Device>>> call, Throwable t) {
+                    deviceAdapter.notifyDataSetChanged();
+                    updateStats();
+                }
+            });
+        }
+    }
 
-        deviceAdapter.notifyDataSetChanged();
-
-        // 更新统计信息
+    private void updateStats() {
         int total = deviceList.size();
         int online = 0;
         int offline = 0;
-
-        for (DeviceManagementActivity.Device device : deviceList) {
-            if ("在线".equals(device.getStatus())) {
-                online++;
-            } else {
-                offline++;
-            }
+        for (Device device : deviceList) {
+            if ("在线".equals(device.getStatusText())) online++; else offline++;
         }
-
         tvTotalDevices.setText(String.valueOf(total));
         tvOnlineDevices.setText(String.valueOf(online));
         tvOfflineDevices.setText(String.valueOf(offline));

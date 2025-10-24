@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.modelfarm.R;
 import com.google.android.material.card.MaterialCardView;
 
+import com.example.modelfarm.network.models.Notification;
+
 import java.util.List;
 
 /**
@@ -18,9 +20,9 @@ import java.util.List;
  */
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder> {
 
-    private final List<MessageNotificationActivity.Notification> notificationList;
+    private final List<Notification> notificationList;
 
-    public NotificationAdapter(List<MessageNotificationActivity.Notification> notificationList) {
+    public NotificationAdapter(List<Notification> notificationList) {
         this.notificationList = notificationList;
     }
 
@@ -34,7 +36,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
-        MessageNotificationActivity.Notification notification = notificationList.get(position);
+        Notification notification = notificationList.get(position);
         holder.bind(notification);
     }
 
@@ -59,14 +61,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             tvLevel = itemView.findViewById(R.id.tvLevel);
         }
 
-        public void bind(MessageNotificationActivity.Notification notification) {
-            tvFarmName.setText(notification.getFarmName());
-            tvMessage.setText(notification.getMessage());
-            tvTime.setText(notification.getTime());
-            tvLevel.setText(notification.getLevel());
-
-            // 设置通知级别颜色
-            switch (notification.getLevel()) {
+        public void bind(Notification notification) {
+            tvFarmName.setText(notification.getTitle());
+            tvMessage.setText(notification.getContent());
+            tvTime.setText(notification.getTimeAgo());
+            tvLevel.setText(notification.getTypeText());
+            // 设置通知级别颜色，根据getPriority
+            switch (notification.getPriority()) {
                 case "high":
                     tvLevel.setTextColor(0xFFF44336);
                     cardNotification.setStrokeColor(0xFFF44336);
@@ -76,17 +77,12 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                     cardNotification.setStrokeColor(0xFFFF9800);
                     break;
                 case "low":
+                default:
                     tvLevel.setTextColor(0xFF4CAF50);
                     cardNotification.setStrokeColor(0xFF4CAF50);
                     break;
             }
-
-            // 设置已读状态
-            if (notification.isRead()) {
-                cardNotification.setAlpha(0.6f);
-            } else {
-                cardNotification.setAlpha(1.0f);
-            }
+            cardNotification.setAlpha(notification.isReadStatus() ? 0.6f : 1.0f);
         }
     }
 }

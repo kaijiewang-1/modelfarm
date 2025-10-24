@@ -14,6 +14,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.network.models.DeviceData;
+import com.example.modelfarm.network.models.Notification;
+import com.example.modelfarm.network.services.DeviceApiService;
+import com.example.modelfarm.network.services.DeviceDataApiService;
+import com.example.modelfarm.network.services.NotificationApiService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -120,23 +131,79 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
     }
 
     private void updateEnvironmentData() {
-        // 模拟环境数据更新
-        tvTemperature.setText("25°C");
-        tvHumidity.setText("65%");
-        tvLight.setText("800Lux");
-        tvSoilHumidity.setText("45%");
-        tvCo2.setText("400ppm");
-        tvWindSpeed.setText("2.5m/s");
+        // 从设备列表中过滤传感器(type=2)，取任一获取最新数据
+        DeviceApiService deviceApi = RetrofitClient.create(this, DeviceApiService.class);
+        deviceApi.getDeviceList(1, 50, null, null, 2, null).enqueue(new Callback<ApiResponse<com.example.modelfarm.network.models.PageResponse<Device>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<com.example.modelfarm.network.models.PageResponse<Device>>> call, Response<ApiResponse<com.example.modelfarm.network.models.PageResponse<Device>>> response) {
+                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null && !response.body().getData().getRecords().isEmpty()) {
+                    Device sensor = response.body().getData().getRecords().get(0);
+                    fetchLatestData(sensor.getId());
+                } else {
+                    showEnvPlaceholders();
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<com.example.modelfarm.network.models.PageResponse<Device>>> call, Throwable t) {
+                showEnvPlaceholders();
+            }
+        });
+    }
+
+    private void fetchLatestData(int deviceId) {
+        DeviceDataApiService dataApi = RetrofitClient.create(this, DeviceDataApiService.class);
+        dataApi.getLatestDeviceData(deviceId).enqueue(new Callback<ApiResponse<DeviceData>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<DeviceData>> call, Response<ApiResponse<DeviceData>> response) {
+                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                    java.util.Map<String, Object> data = response.body().getData().getData();
+                    String temperature = data.get("temperature")!=null ? data.get("temperature").toString()+"°C" : "--°C";
+                    String humidity = data.get("humidity")!=null ? data.get("humidity").toString()+"%" : "--%";
+                    String light = data.get("light")!=null ? data.get("light").toString()+"Lux" : "--Lux";
+                    tvTemperature.setText(temperature);
+                    tvHumidity.setText(humidity);
+                    tvLight.setText(light);
+                } else {
+                    showEnvPlaceholders();
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<DeviceData>> call, Throwable t) {
+                showEnvPlaceholders();
+            }
+        });
+    }
+
+    private void showEnvPlaceholders() {
+        tvTemperature.setText("--°C");
+        tvHumidity.setText("--%");
+        tvLight.setText("--Lux");
+        if (tvSoilHumidity != null) tvSoilHumidity.setText("--%");
+        if (tvCo2 != null) tvCo2.setText("--ppm");
+        if (tvWindSpeed != null) tvWindSpeed.setText("--m/s");
     }
 
     private void loadAlertData() {
-        // 模拟报警数据
-        alertList.clear();
-        alertList.add(new Alert("温度异常", "A区大棚温度超过30°C", "2024-01-15 14:30", "high"));
-        alertList.add(new Alert("湿度不足", "B区大棚湿度低于40%", "2024-01-15 13:45", "medium"));
-        alertList.add(new Alert("设备离线", "C区光照传感器离线", "2024-01-15 12:20", "low"));
-        
-        alertAdapter.notifyDataSetChanged();
+        // 使用未删除的通知作为预警来源
+        NotificationApiService notificationApi = RetrofitClient.create(this, NotificationApiService.class);
+        notificationApi.getAllNotifications().enqueue(new Callback<ApiResponse<java.util.List<Notification>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<java.util.List<Notification>>> call, Response<ApiResponse<java.util.List<Notification>>> response) {
+                alertList.clear();
+                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                    for (Notification n : response.body().getData()) {
+                        String level = n.getType()==2 ? "high" : (n.getType()==3 ? "medium" : "low");
+                        alertList.add(new Alert(n.getTitle(), n.getContent(), n.getCreatedAt(), level));
+                    }
+                }
+                alertAdapter.notifyDataSetChanged();
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<java.util.List<Notification>>> call, Throwable t) {
+                // 保持空列表
+                alertAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     // 报警数据模型

@@ -12,18 +12,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.modelfarm.R;
 import com.google.android.material.card.MaterialCardView;
 
+import com.example.modelfarm.network.models.Device;
+
 import java.util.List;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder> {
 
-    private List<DeviceManagementActivity.Device> deviceList;
+    private List<Device> deviceList;
     private OnDeviceClickListener listener;
 
     public interface OnDeviceClickListener {
-        void onDeviceClick(DeviceManagementActivity.Device device);
+        void onDeviceClick(Device device);
     }
 
-    public DeviceAdapter(List<DeviceManagementActivity.Device> deviceList, OnDeviceClickListener listener) {
+    public DeviceAdapter(List<Device> deviceList, OnDeviceClickListener listener) {
         this.deviceList = deviceList;
         this.listener = listener;
     }
@@ -38,7 +40,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
     @Override
     public void onBindViewHolder(@NonNull DeviceViewHolder holder, int position) {
-        DeviceManagementActivity.Device device = deviceList.get(position);
+        Device device = deviceList.get(position);
         holder.bind(device, listener);
     }
 
@@ -63,14 +65,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             tvDeviceValue = itemView.findViewById(R.id.tv_device_value);
         }
 
-        public void bind(DeviceManagementActivity.Device device, OnDeviceClickListener listener) {
-            ivDeviceIcon.setImageResource(device.getIconRes());
+        public void bind(Device device, OnDeviceClickListener listener) {
+            ivDeviceIcon.setImageResource(device.getIconResource());
             tvDeviceName.setText(device.getName());
-            tvDeviceStatus.setText(device.getStatus());
-            tvDeviceValue.setText(device.getValue());
+            tvDeviceStatus.setText(device.getStatusText());
+            tvDeviceValue.setText(device.getDisplayValue());
 
             // 根据设备状态设置颜色
-            if ("在线".equals(device.getStatus())) {
+            if ("在线".equals(device.getStatusText())) {
                 tvDeviceStatus.setTextColor(itemView.getContext().getResources().getColor(android.R.color.holo_green_dark));
             } else {
                 tvDeviceStatus.setTextColor(itemView.getContext().getResources().getColor(android.R.color.holo_red_dark));

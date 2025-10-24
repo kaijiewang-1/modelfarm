@@ -15,6 +15,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.R;
+import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.PageResponse;
+import com.example.modelfarm.network.services.DeviceApiService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +39,7 @@ public class DeviceListActivity extends AppCompatActivity {
     private TextView tvEmptyState;
 
     private DeviceAdapter adapter;
+    private List<Device> deviceList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,41 +61,41 @@ public class DeviceListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        // 创建模拟设备数据
-        List<DeviceManagementActivity.Device> deviceManagementList = new ArrayList<>();
-        deviceManagementList.add(new DeviceManagementActivity.Device(
-            "温湿度传感器001",
-            "在线",
-            "22°C / 65%",
-            R.drawable.ic_thermometer
-        ));
-        deviceManagementList.add(new DeviceManagementActivity.Device(
-            "光照传感器002",
-            "离线",
-            "无数据",
-            R.drawable.ic_light
-        ));
-        deviceManagementList.add(new DeviceManagementActivity.Device(
-            "自动灌溉系统001",
-            "在线",
-            "运行中",
-            R.drawable.ic_water_drop
-        ));
-
-        adapter = new DeviceAdapter(deviceManagementList, new DeviceAdapter.OnDeviceClickListener() {
+        deviceList = new ArrayList<>();
+        adapter = new DeviceAdapter(deviceList, new DeviceAdapter.OnDeviceClickListener() {
             @Override
-            public void onDeviceClick(DeviceManagementActivity.Device device) {
-                // 跳转到设备详情页面
+            public void onDeviceClick(Device device) {
                 Intent intent = new Intent(DeviceListActivity.this, DeviceDetailActivity.class);
+                intent.putExtra("device_id", device.getId());
                 intent.putExtra("device_name", device.getName());
-                intent.putExtra("device_type", "传感器");
-                intent.putExtra("device_status", device.getStatus());
+                intent.putExtra("device_type", device.getTypeText());
+                intent.putExtra("device_status", device.getStatusText());
                 startActivity(intent);
             }
         });
-        
         rvDeviceList.setLayoutManager(new LinearLayoutManager(this));
         rvDeviceList.setAdapter(adapter);
+        loadDevices();
+    }
+
+    private void loadDevices() {
+        DeviceApiService api = RetrofitClient.create(this, DeviceApiService.class);
+        api.getDeviceList(1, 100, null, null, null, null).enqueue(new Callback<ApiResponse<PageResponse<Device>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<PageResponse<Device>>> call, Response<ApiResponse<PageResponse<Device>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200 && response.body().getData() != null) {
+                    deviceList.clear();
+                    deviceList.addAll(response.body().getData().getRecords());
+                    adapter.notifyDataSetChanged();
+                }
+                updateEmptyState();
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<PageResponse<Device>>> call, Throwable t) {
+                updateEmptyState();
+            }
+        });
     }
 
     private void updateEmptyState() {

@@ -35,6 +35,15 @@
             app:cornerRadius="8dp"
             android:layout_marginBottom="16dp" />
 
+        <!-- 显示农场JSON按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_show_farms_json"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="显示农场JSON"
+            android:layout_marginBottom="12dp" />
+
         <!-- 农场列表 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_farms"

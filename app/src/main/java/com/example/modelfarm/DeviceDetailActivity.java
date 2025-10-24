@@ -15,6 +15,13 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.R;
 import com.google.android.material.button.MaterialButton;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.network.services.DeviceApiService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import com.google.android.material.card.MaterialCardView;
 
 /**
@@ -34,10 +41,20 @@ public class DeviceDetailActivity extends AppCompatActivity {
     private MaterialCardView cardDeviceControl;
     private MaterialCardView cardDeviceMaintenance;
     private MaterialButton btnDeleteDevice;
+    private MaterialButton btnCreateOrder;
+    private MaterialButton btnCopyJson;
 
     private String deviceName;
     private String deviceType;
     private String deviceStatus;
+    private int deviceId = -1;
+    private TextView tvPushName;
+    private TextView tvMac;
+    private TextView tvUrl;
+    private TextView tvEnterpriseId;
+    private TextView tvCreatedAt;
+    private TextView tvUpdatedAt;
+    private TextView tvRawJson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,28 +79,76 @@ public class DeviceDetailActivity extends AppCompatActivity {
         cardDeviceControl = findViewById(R.id.cardDeviceControl);
         cardDeviceMaintenance = findViewById(R.id.cardDeviceMaintenance);
         btnDeleteDevice = findViewById(R.id.btnDeleteDevice);
+        btnCreateOrder = findViewById(R.id.btnCreateOrder);
+        btnCopyJson = findViewById(R.id.btnCopyJson);
+        tvPushName = findViewById(R.id.tvPushName);
+        tvMac = findViewById(R.id.tvMac);
+        tvUrl = findViewById(R.id.tvUrl);
+        tvEnterpriseId = findViewById(R.id.tvEnterpriseId);
+        tvCreatedAt = findViewById(R.id.tvCreatedAt);
+        tvUpdatedAt = findViewById(R.id.tvUpdatedAt);
+        tvRawJson = findViewById(R.id.tvRawJson);
     }
 
     private void loadDeviceData() {
         // 获取传递的设备信息
         Intent intent = getIntent();
+        if (intent.hasExtra("device_id")) {
+            deviceId = intent.getIntExtra("device_id", -1);
+        }
         deviceName = intent.getStringExtra("device_name");
         deviceType = intent.getStringExtra("device_type");
         deviceStatus = intent.getStringExtra("device_status");
-
-        // 设置设备信息
-        tvTitle.setText(deviceName != null ? deviceName : "设备详情");
-        tvDeviceType.setText(deviceType != null ? deviceType : "传感器");
-        tvInstallLocation.setText("北方一号农场 - A区大棚");
-        tvDeviceStatus.setText(deviceStatus != null ? deviceStatus : "在线");
-        tvLastMaintenance.setText("2024-01-15");
-
-        // 设置状态颜色
-        if ("在线".equals(deviceStatus)) {
-            tvDeviceStatus.setTextColor(0xFF4CAF50);
+        if (deviceId > 0) {
+            fetchDeviceDetail(deviceId);
         } else {
-            tvDeviceStatus.setTextColor(0xFFF44336);
+            // 回退到传参展示
+            tvTitle.setText(deviceName != null ? deviceName : "设备详情");
+            tvDeviceType.setText(deviceType != null ? deviceType : "传感器");
+            tvInstallLocation.setText("-");
+            tvDeviceStatus.setText(deviceStatus != null ? deviceStatus : "-");
+            tvLastMaintenance.setText("-");
         }
+    }
+
+    private void fetchDeviceDetail(int id) {
+        DeviceApiService api = RetrofitClient.create(this, DeviceApiService.class);
+        api.getDevice(id).enqueue(new Callback<ApiResponse<Device>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Device>> call, Response<ApiResponse<Device>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200 && response.body().getData() != null) {
+                    Device d = response.body().getData();
+                    tvTitle.setText(d.getName());
+                    tvDeviceType.setText(d.getTypeText());
+                    tvInstallLocation.setText(d.getProperties() != null && d.getProperties().get("location") != null ? String.valueOf(d.getProperties().get("location")) : "-");
+                    tvDeviceStatus.setText(d.getStatusText());
+                    tvLastMaintenance.setText(d.getUpdatedAt());
+                    if (tvPushName != null) tvPushName.setText(d.getPushName()!=null?d.getPushName():"-");
+                    if (tvMac != null) tvMac.setText(d.getMac());
+                    if (tvUrl != null) tvUrl.setText(d.getUrl()!=null?d.getUrl():"-");
+                    if (tvEnterpriseId != null) tvEnterpriseId.setText(String.valueOf(d.getEnterpriseId()));
+                    if (tvCreatedAt != null) tvCreatedAt.setText(d.getCreatedAt());
+                    if (tvUpdatedAt != null) tvUpdatedAt.setText(d.getUpdatedAt());
+                    if ("在线".equals(d.getStatusText())) {
+                        tvDeviceStatus.setTextColor(0xFF4CAF50);
+                    } else {
+                        tvDeviceStatus.setTextColor(0xFFF44336);
+                    }
+
+                    // 显示原始 JSON（格式化）
+                    try {
+                        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
+                        String json = gson.toJson(d);
+                        if (tvRawJson != null) tvRawJson.setText(json);
+                    } catch (Exception ignore) {}
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Device>> call, Throwable t) {
+                // 忽略，保持占位
+            }
+        });
     }
 
     private void setupClickListeners() {
@@ -125,6 +190,36 @@ public class DeviceDetailActivity extends AppCompatActivity {
                 showDeleteConfirmDialog();
             }
         });
+
+        // 创建工单
+        btnCreateOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DeviceDetailActivity.this, OrderCreateActivity.class);
+                intent.putExtra("hint_title", "设备故障维修工单");
+                intent.putExtra("hint_desc", tvTitle!=null? ("设备[" + tvTitle.getText() + "]异常，请检查"): "");
+                startActivity(intent);
+            }
+        });
+
+        // 复制 JSON
+        if (btnCopyJson != null) {
+            btnCopyJson.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        String txt = tvRawJson != null ? tvRawJson.getText().toString() : "";
+                        android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        if (cm != null) {
+                            cm.setPrimaryClip(android.content.ClipData.newPlainText("device_json", txt));
+                            Toast.makeText(DeviceDetailActivity.this, "已复制 JSON", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(DeviceDetailActivity.this, "复制失败", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
     }
 
     private void showDataCurve() {

@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         
         try {
             // 直接跳转到登录页面
-            val intent = Intent(this, login.login::class.java)
+            val intent = Intent(this, logins.login::class.java)
             startActivity(intent)
             finish()
         } catch (e: Exception) {

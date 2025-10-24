@@ -14,8 +14,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.R;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.FarmSite;
+import com.example.modelfarm.network.services.FarmApiService;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +39,7 @@ public class farm_detail extends AppCompatActivity {
     private RecyclerView rvPoints;
     private FarmPointAdapter pointAdapter;
     private List<FarmPoint> pointList;
+    private int farmId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,32 +93,47 @@ public class farm_detail extends AppCompatActivity {
     }
 
     private void loadFarmData() {
-        // 从Intent获取农场信息
         Intent intent = getIntent();
         String farmName = intent.getStringExtra("farm_name");
         String farmLocation = intent.getStringExtra("farm_location");
-        
-        if (farmName != null) {
-            tvFarmName.setText(farmName);
-        }
-        if (farmLocation != null) {
-            tvFarmLocation.setText(farmLocation);
-        }
-        
-        // 设置其他信息
-        tvFarmArea.setText("500亩");
-        tvPointCount.setText("3");
-        tvDeviceCount.setText("12");
+        farmId = intent.getIntExtra("farm_id", -1);
+        if (farmName != null) tvFarmName.setText(farmName);
+        if (farmLocation != null) tvFarmLocation.setText(farmLocation);
+        tvFarmArea.setText("-");
     }
 
     private void loadPointData() {
-        // 模拟农场点数据
-        pointList.clear();
-        pointList.add(new FarmPoint("A区大棚", "200平方米", "番茄", "2023年3月"));
-        pointList.add(new FarmPoint("B区大棚", "150平方米", "黄瓜", "2023年4月"));
-        pointList.add(new FarmPoint("C区大棚", "180平方米", "茄子", "2023年5月"));
-        
-        pointAdapter.notifyDataSetChanged();
+        if (farmId <= 0) {
+            pointList.clear();
+            pointAdapter.notifyDataSetChanged();
+            tvPointCount.setText("0");
+            tvDeviceCount.setText("0");
+            return;
+        }
+        FarmApiService api = RetrofitClient.create(this, FarmApiService.class);
+        api.getFarmSites(farmId).enqueue(new Callback<ApiResponse<java.util.List<FarmSite>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<java.util.List<FarmSite>>> call, Response<ApiResponse<java.util.List<FarmSite>>> response) {
+                pointList.clear();
+                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                    for (FarmSite s: response.body().getData()) {
+                        String area = s.getProperties()!=null && s.getProperties().get("capacity")!=null ? String.valueOf(s.getProperties().get("capacity")) : "-";
+                        String crop = s.getProperties()!=null && s.getProperties().get("type")!=null ? String.valueOf(s.getProperties().get("type")) : "-";
+                        pointList.add(new FarmPoint(s.getName(), area, crop, s.getCreatedAt()));
+                    }
+                }
+                pointAdapter.notifyDataSetChanged();
+                tvPointCount.setText(String.valueOf(pointList.size()));
+                tvDeviceCount.setText("-");
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<java.util.List<FarmSite>>> call, Throwable t) {
+                pointList.clear();
+                pointAdapter.notifyDataSetChanged();
+                tvPointCount.setText("0");
+                tvDeviceCount.setText("0");
+            }
+        });
     }
 
     // 农场点数据模型

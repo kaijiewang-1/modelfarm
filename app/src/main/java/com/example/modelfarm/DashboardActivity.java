@@ -18,10 +18,17 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.R;
-import com.google.android.material.card.MaterialCardView;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.services.EnterpriseApiService;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.EnterpriseStats;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import farm.farm_list;
-import login.login;
+import logins.login;
+import com.google.android.material.card.MaterialCardView;
 
 /**
  * 智慧养殖系统主控制台
@@ -31,15 +38,10 @@ public class DashboardActivity extends AppCompatActivity {
 
     // 功能模块卡片
     private MaterialCardView cardDeviceManagement;
-    private MaterialCardView cardEnvironmentMonitoring;
     private MaterialCardView cardFarmManagement;
-    private MaterialCardView cardDataAnalysis;
     private MaterialCardView cardCompanyInfo;
     private MaterialCardView cardProfile;
-    private MaterialCardView cardLivestockManagement;
-    private MaterialCardView cardFeedManagement;
-    private MaterialCardView cardHealthMonitoring;
-    private MaterialCardView cardProductionTracking;
+    private MaterialCardView cardOrderManagement;
 
     // 实时数据显示
     private TextView tvTemperature;
@@ -53,12 +55,16 @@ public class DashboardActivity extends AppCompatActivity {
     private Handler dataUpdateHandler = new Handler();
     private Runnable dataUpdateRunnable;
     
+    // API相关
+    private EnterpriseApiService enterpriseApi;
+    
     // 动画和交互
     private Animation cardClickAnimation;
     private Animation fadeInAnimation;
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "SmartFarmPrefs";
     private static final String KEY_FIRST_VISIT = "first_visit";
+    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,7 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
 
         initViews();
+        initApiComponents();
         initAnimations();
         initPreferences();
         setupClickListeners();
@@ -75,18 +82,21 @@ public class DashboardActivity extends AppCompatActivity {
         checkFirstVisit();
     }
 
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        enterpriseApi = RetrofitClient.create(this, EnterpriseApiService.class);
+    }
+
     private void initViews() {
         // 功能模块卡片
         cardDeviceManagement = findViewById(R.id.card_device_management);
-        cardEnvironmentMonitoring = findViewById(R.id.card_environment_monitoring);
         cardFarmManagement = findViewById(R.id.card_farm_management);
-        cardDataAnalysis = findViewById(R.id.card_data_analysis);
         cardCompanyInfo = findViewById(R.id.card_company_info);
         cardProfile = findViewById(R.id.card_profile);
-        cardLivestockManagement = findViewById(R.id.card_livestock_management);
-        cardFeedManagement = findViewById(R.id.card_feed_management);
-        cardHealthMonitoring = findViewById(R.id.card_health_monitoring);
-        cardProductionTracking = findViewById(R.id.card_production_tracking);
+        cardOrderManagement = findViewById(R.id.card_order_management);
 
         // 实时数据显示
         tvTemperature = findViewById(R.id.tv_temperature);
@@ -95,16 +105,6 @@ public class DashboardActivity extends AppCompatActivity {
         tvFarmCount = findViewById(R.id.tv_farm_count);
         tvDeviceCount = findViewById(R.id.tv_device_count);
         tvAlertCount = findViewById(R.id.tv_alert_count);
-        
-        // 消息通知按钮
-        findViewById(R.id.btnMessageNotification).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(DashboardActivity.this, MessageNotificationActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-            }
-        });
     }
 
     private void initAnimations() {
@@ -141,34 +141,12 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
-        // 环境监控 - 养殖环境实时监控
-        cardEnvironmentMonitoring.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                v.startAnimation(cardClickAnimation);
-                Intent intent = new Intent(DashboardActivity.this, EnvironmentMonitoringActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-            }
-        });
-
         // 农场管理 - 养殖场管理
         cardFarmManagement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 v.startAnimation(cardClickAnimation);
                 Intent intent = new Intent(DashboardActivity.this, farm_list.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-            }
-        });
-
-        // 数据分析 - 养殖数据分析
-        cardDataAnalysis.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                v.startAnimation(cardClickAnimation);
-                Intent intent = new Intent(DashboardActivity.this, DataAnalysisActivity.class);
                 startActivity(intent);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
@@ -196,52 +174,50 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
-        // 牲畜管理 - 牲畜信息管理
-        cardLivestockManagement.setOnClickListener(new View.OnClickListener() {
+        // 工单管理 - 列表页
+        cardOrderManagement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showComingSoon("牲畜管理功能");
+                v.startAnimation(cardClickAnimation);
+                Intent intent = new Intent(DashboardActivity.this, OrderListActivity.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
         });
 
-        // 饲料管理 - 饲料投喂管理
-        cardFeedManagement.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showComingSoon("饲料管理功能");
-            }
-        });
-
-        // 健康监控 - 牲畜健康监测
-        cardHealthMonitoring.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showComingSoon("健康监控功能");
-            }
-        });
-
-        // 生产跟踪 - 生产数据跟踪
-        cardProductionTracking.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showComingSoon("生产跟踪功能");
-            }
-        });
     }
+
 
     /**
      * 更新实时数据
      */
     private void updateRealTimeData() {
-        // 模拟养殖场环境数据
         tvTemperature.setText("22°C");
         tvHumidity.setText("68%");
         tvWelcome.setText("欢迎使用智慧养殖系统");
-        
-        // 模拟统计数据
-        tvFarmCount.setText("3个养殖场");
-        tvDeviceCount.setText("15台设备");
-        tvAlertCount.setText("2个预警");
+        enterpriseApi.getEnterpriseStats().enqueue(new Callback<ApiResponse<EnterpriseStats>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<EnterpriseStats>> call, Response<ApiResponse<EnterpriseStats>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
+                    EnterpriseStats stats = response.body().getData();
+                    tvFarmCount.setText(stats.getFarmCount() + "个养殖场");
+                    tvDeviceCount.setText(stats.getDeviceCount() + "台设备");
+                    tvAlertCount.setText(stats.getFaultDeviceCount() + "个预警");
+                } else {
+                    setDefaultStats();
+                }
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<EnterpriseStats>> call, Throwable t) {
+                setDefaultStats();
+            }
+
+            private void setDefaultStats() {
+                tvFarmCount.setText("3个养殖场");
+                tvDeviceCount.setText("15台设备");
+                tvAlertCount.setText("2个预警");
+            }
+        });
     }
 
     /**

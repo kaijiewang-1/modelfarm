@@ -1,10 +1,15 @@
 package com.example.modelfarm;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +20,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.R;
+import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.services.NotificationApiService;
+import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.Notification;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +45,9 @@ public class MessageNotificationActivity extends AppCompatActivity {
 
     private List<Notification> notificationList = new ArrayList<>();
     private NotificationAdapter adapter;
+    
+    // API相关
+    private NotificationApiService notificationApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +56,17 @@ public class MessageNotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_message_notification);
 
         initViews();
+        initApiComponents();
         setupRecyclerView();
         loadNotificationData();
         setupClickListeners();
+    }
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        notificationApi = RetrofitClient.create(this, NotificationApiService.class);
     }
 
     private void initViews() {
@@ -61,35 +84,30 @@ public class MessageNotificationActivity extends AppCompatActivity {
     }
 
     private void loadNotificationData() {
-        // 模拟加载通知数据
-        notificationList.clear();
-        
-        notificationList.add(new Notification(
-            "北方一号农场",
-            "设备离线，请及时处理",
-            "2小时前",
-            "high",
-            false
-        ));
-        
-        notificationList.add(new Notification(
-            "南方二号农场",
-            "温度异常，请检查温控设备",
-            "4小时前",
-            "medium",
-            false
-        ));
-        
-        notificationList.add(new Notification(
-            "系统通知",
-            "系统维护完成，所有功能已恢复正常",
-            "1天前",
-            "low",
-            true
-        ));
-
-        adapter.notifyDataSetChanged();
-        updateEmptyState();
+        notificationApi.getAllNotifications().enqueue(new Callback<ApiResponse<List<Notification>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Notification>>> call, Response<ApiResponse<List<Notification>>> response) {
+                runOnUiThread(() -> {
+                    notificationList.clear();
+                    if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
+                        notificationList.addAll(response.body().getData());
+                    } else {
+                        Toast.makeText(MessageNotificationActivity.this, "获取通知数据失败: " + (response.body()!=null?response.body().getMessage():"接口异常"), Toast.LENGTH_LONG).show();
+                    }
+                    adapter.notifyDataSetChanged();
+                    updateEmptyState();
+                });
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<List<Notification>>> call, Throwable t) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MessageNotificationActivity.this, "获取通知数据失败: 网络异常", Toast.LENGTH_LONG).show();
+                    notificationList.clear();
+                    adapter.notifyDataSetChanged();
+                    updateEmptyState();
+                });
+            }
+        });
     }
 
     private void updateEmptyState() {
@@ -121,36 +139,11 @@ public class MessageNotificationActivity extends AppCompatActivity {
     }
 
     private void markAllAsRead() {
-        for (Notification notification : notificationList) {
-            notification.setRead(true);
-        }
+        // 已读处理应通过后台接口，如PUT /notification/readAll，原有本地setRead无效，直接请求后台并刷新列表（如有需求可添加请求）。
+        // 示例：调用notificationApi.markAllAsRead();
+        // 示例后刷新loadNotificationData();
+        // 当前先清空列表UI相关已读操作。
         adapter.notifyDataSetChanged();
         btnMarkAllRead.setVisibility(View.GONE);
-    }
-
-    /**
-     * 通知数据模型
-     */
-    public static class Notification {
-        private final String farmName;
-        private final String message;
-        private final String time;
-        private final String level;
-        private boolean isRead;
-
-        public Notification(String farmName, String message, String time, String level, boolean isRead) {
-            this.farmName = farmName;
-            this.message = message;
-            this.time = time;
-            this.level = level;
-            this.isRead = isRead;
-        }
-
-        public String getFarmName() { return farmName; }
-        public String getMessage() { return message; }
-        public String getTime() { return time; }
-        public String getLevel() { return level; }
-        public boolean isRead() { return isRead; }
-        public void setRead(boolean read) { isRead = read; }
     }
 }
