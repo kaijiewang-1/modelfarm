@@ -1,10 +1,15 @@
 package com.example.modelfarm;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.R;
+import com.example.modelfarm.utils.SimpleApiHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +39,9 @@ public class MessageNotificationActivity extends AppCompatActivity {
 
     private List<Notification> notificationList = new ArrayList<>();
     private NotificationAdapter adapter;
+    
+    // API相关
+    private SimpleApiHelper simpleApiHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +50,17 @@ public class MessageNotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_message_notification);
 
         initViews();
+        initApiComponents();
         setupRecyclerView();
         loadNotificationData();
         setupClickListeners();
+    }
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        simpleApiHelper = new SimpleApiHelper(this);
     }
 
     private void initViews() {
@@ -61,35 +78,84 @@ public class MessageNotificationActivity extends AppCompatActivity {
     }
 
     private void loadNotificationData() {
-        // 模拟加载通知数据
-        notificationList.clear();
+        // 从API获取通知数据
+        simpleApiHelper.getAllNotifications(new SimpleApiHelper.NotificationListCallback() {
+            @Override
+            public void onSuccess(List<SimpleApiHelper.NotificationData> apiNotifications) {
+                runOnUiThread(() -> {
+                    // 清空现有数据
+                    notificationList.clear();
+                    
+                    // 转换API数据为本地通知模型
+                    for (SimpleApiHelper.NotificationData apiNotification : apiNotifications) {
+                        Notification localNotification = convertApiNotificationToLocal(apiNotification);
+                        notificationList.add(localNotification);
+                    }
+                    
+                    adapter.notifyDataSetChanged();
+                    updateEmptyState();
+                });
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MessageNotificationActivity.this, "获取通知数据失败: " + errorMessage, Toast.LENGTH_LONG).show();
+                    // 显示空状态
+                    notificationList.clear();
+                    adapter.notifyDataSetChanged();
+                    updateEmptyState();
+                });
+            }
+        });
+    }
+    
+    /**
+     * 将API通知数据转换为本地通知模型
+     */
+    private Notification convertApiNotificationToLocal(SimpleApiHelper.NotificationData apiNotification) {
+        // 使用通知模型的内置方法
+        String priority = getNotificationPriority(apiNotification.type);
+        String timeAgo = getTimeAgo(apiNotification.createdAt);
+        boolean isRead = apiNotification.isRead == 1;
         
-        notificationList.add(new Notification(
-            "北方一号农场",
-            "设备离线，请及时处理",
-            "2小时前",
-            "high",
-            false
-        ));
-        
-        notificationList.add(new Notification(
-            "南方二号农场",
-            "温度异常，请检查温控设备",
-            "4小时前",
-            "medium",
-            false
-        ));
-        
-        notificationList.add(new Notification(
-            "系统通知",
-            "系统维护完成，所有功能已恢复正常",
-            "1天前",
-            "low",
-            true
-        ));
-
-        adapter.notifyDataSetChanged();
-        updateEmptyState();
+        return new Notification(
+            apiNotification.title,
+            apiNotification.content,
+            timeAgo,
+            priority,
+            isRead
+        );
+    }
+    
+    private String getNotificationPriority(int type) {
+        switch (type) {
+            case 1: return "系统通知";
+            case 2: return "警告通知";
+            case 3: return "消息通知";
+            default: return "未知";
+        }
+    }
+    
+    private String getTimeAgo(String createdAt) {
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            java.util.Date createdDate = sdf.parse(createdAt);
+            long diffInMillis = System.currentTimeMillis() - createdDate.getTime();
+            long diffInMinutes = diffInMillis / (1000 * 60);
+            
+            if (diffInMinutes < 1) {
+                return "刚刚";
+            } else if (diffInMinutes < 60) {
+                return diffInMinutes + "分钟前";
+            } else if (diffInMinutes < 1440) {
+                return (diffInMinutes / 60) + "小时前";
+            } else {
+                return (diffInMinutes / 1440) + "天前";
+            }
+        } catch (Exception e) {
+            return "未知时间";
+        }
     }
 
     private void updateEmptyState() {

@@ -55,7 +55,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_today"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -64,7 +64,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_week"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -74,7 +74,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_month"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"

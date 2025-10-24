@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,6 +14,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Modelfarm"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name="personal.profile"
@@ -28,19 +33,19 @@
             android:name="farm.farm_list"
             android:exported="false" />
         <activity
-            android:name="login.join_company"
+            android:name="logins.join_company"
             android:exported="false" />
         <activity
-            android:name="login.create_company"
+            android:name="logins.create_company"
             android:exported="false" />
         <activity
-            android:name="login.choose_company"
+            android:name="logins.choose_company"
             android:exported="false" />
         <activity
-            android:name="login.register"
+            android:name="logins.register"
             android:exported="false" />
         <activity
-            android:name="login.login"
+            android:name="logins.login"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

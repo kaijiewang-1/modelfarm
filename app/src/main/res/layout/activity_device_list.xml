@@ -43,7 +43,7 @@
         <!-- 添加设备按钮 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddDevice"
-            style="@style/Widget.Material3.Button.IconButton"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:backgroundTint="#4CAF50"

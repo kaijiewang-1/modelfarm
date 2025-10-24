@@ -24,8 +24,8 @@ import com.google.android.material.card.MaterialCardView;
 import java.util.ArrayList;
 import java.util.List;
 
-import login.create_company;
-import login.join_company;
+import logins.create_company;
+import logins.join_company;
 
 /**
  * 企业列表管理页面
@@ -138,7 +138,7 @@ public class CompanyListActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 退出登录
-                Intent intent = new Intent(CompanyListActivity.this, login.login.class);
+                Intent intent = new Intent(CompanyListActivity.this, logins.login.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();

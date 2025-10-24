@@ -19,4 +19,5 @@
     
     <!-- Material dynamic colors -->
     <color name="material_dynamic_primary">#4CAF50</color>
+    <color name="material_dynamic_neutral90">#F5F5F5</color>
 </resources>

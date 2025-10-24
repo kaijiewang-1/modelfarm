@@ -59,7 +59,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_notifications"
                     android:contentDescription="消息通知"
-                    android:tint="@android:color/white"/>
+                    app:tint="@android:color/white"/>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

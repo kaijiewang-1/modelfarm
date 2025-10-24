@@ -1,9 +1,16 @@
 package com.example.modelfarm;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.example.modelfarm.utils.SimpleApiHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +39,9 @@ public class DeviceManagementActivity extends AppCompatActivity {
     private RecyclerView rvDevices;
     private DeviceAdapter deviceAdapter;
     private List<Device> deviceList;
+    
+    // API相关
+    private SimpleApiHelper simpleApiHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +50,17 @@ public class DeviceManagementActivity extends AppCompatActivity {
         setContentView(R.layout.activity_device_management);
 
         initViews();
+        initApiComponents();
         setupToolbar();
         setupRecyclerView();
         loadDeviceData();
+    }
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        simpleApiHelper = new SimpleApiHelper(this);
     }
 
     private void initViews() {
@@ -76,18 +95,72 @@ public class DeviceManagementActivity extends AppCompatActivity {
     }
 
     private void loadDeviceData() {
-        // 模拟设备数据
-        deviceList.clear();
-        deviceList.add(new Device("温度传感器-001", "在线", "25.5°C", R.drawable.ic_thermometer));
-        deviceList.add(new Device("湿度传感器-002", "在线", "65%", R.drawable.ic_humidity));
-        deviceList.add(new Device("光照传感器-003", "离线", "无数据", R.drawable.ic_light));
-        deviceList.add(new Device("通风设备-004", "在线", "运行中", R.drawable.ic_fan));
-        deviceList.add(new Device("加热设备-005", "在线", "待机", R.drawable.ic_heater));
-        deviceList.add(new Device("监控摄像头-006", "离线", "无信号", R.drawable.ic_camera));
-
-        deviceAdapter.notifyDataSetChanged();
-
-        // 更新统计信息
+        // 从API获取设备数据
+        simpleApiHelper.getDeviceList(new SimpleApiHelper.DeviceListCallback() {
+            @Override
+            public void onSuccess(List<SimpleApiHelper.DeviceData> devices) {
+                runOnUiThread(() -> {
+                    // 清空现有数据
+                    deviceList.clear();
+                    
+                    // 转换API数据为本地设备模型
+                    for (SimpleApiHelper.DeviceData apiDevice : devices) {
+                        Device localDevice = convertApiDeviceToLocal(apiDevice);
+                        deviceList.add(localDevice);
+                    }
+                    
+                    deviceAdapter.notifyDataSetChanged();
+                    updateDeviceStatistics();
+                });
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(() -> {
+                    Toast.makeText(DeviceManagementActivity.this, "获取设备数据失败: " + errorMessage, Toast.LENGTH_LONG).show();
+                    // 显示空状态
+                    deviceList.clear();
+                    deviceAdapter.notifyDataSetChanged();
+                    updateDeviceStatistics();
+                });
+            }
+        });
+    }
+    
+    /**
+     * 将API设备数据转换为本地设备模型
+     */
+    private Device convertApiDeviceToLocal(SimpleApiHelper.DeviceData apiDevice) {
+        // 使用设备模型的内置方法
+        String status = getDeviceStatusText(apiDevice.status);
+        String value = apiDevice.value;
+        int iconRes = getDeviceIconResource(apiDevice.type);
+        
+        return new Device(apiDevice.name, status, value, iconRes);
+    }
+    
+    private String getDeviceStatusText(int status) {
+        switch (status) {
+            case 1: return "在线";
+            case 0: return "离线";
+            case -1: return "故障";
+            default: return "未知";
+        }
+    }
+    
+    private int getDeviceIconResource(int type) {
+        switch (type) {
+            case 1: return R.drawable.ic_camera;
+            case 2: return R.drawable.ic_thermometer;
+            case 3: return R.drawable.ic_control;
+            default: return R.drawable.ic_device;
+        }
+    }
+    
+    /**
+     * 更新设备统计信息
+     */
+    private void updateDeviceStatistics() {
         int total = deviceList.size();
         int online = 0;
         int offline = 0;

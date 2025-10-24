@@ -18,10 +18,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.R;
+import com.example.modelfarm.utils.SimpleApiHelper;
 import com.google.android.material.card.MaterialCardView;
 
 import farm.farm_list;
-import login.login;
+import logins.login;
 
 /**
  * 智慧养殖系统主控制台
@@ -53,12 +54,16 @@ public class DashboardActivity extends AppCompatActivity {
     private Handler dataUpdateHandler = new Handler();
     private Runnable dataUpdateRunnable;
     
+    // API相关
+    private SimpleApiHelper simpleApiHelper;
+    
     // 动画和交互
     private Animation cardClickAnimation;
     private Animation fadeInAnimation;
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "SmartFarmPrefs";
     private static final String KEY_FIRST_VISIT = "first_visit";
+    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,12 +72,21 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
 
         initViews();
+        initApiComponents();
         initAnimations();
         initPreferences();
         setupClickListeners();
         updateRealTimeData();
         startDataUpdate();
         checkFirstVisit();
+    }
+
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        simpleApiHelper = new SimpleApiHelper(this);
     }
 
     private void initViews() {
@@ -238,10 +252,34 @@ public class DashboardActivity extends AppCompatActivity {
         tvHumidity.setText("68%");
         tvWelcome.setText("欢迎使用智慧养殖系统");
         
-        // 模拟统计数据
-        tvFarmCount.setText("3个养殖场");
-        tvDeviceCount.setText("15台设备");
-        tvAlertCount.setText("2个预警");
+        // 从API获取企业统计数据
+        if (simpleApiHelper != null) {
+            simpleApiHelper.getEnterpriseStats(new SimpleApiHelper.EnterpriseStatsCallback() {
+                @Override
+                public void onSuccess(SimpleApiHelper.EnterpriseStats stats) {
+                    runOnUiThread(() -> {
+                        tvFarmCount.setText(stats.farmCount + "个养殖场");
+                        tvDeviceCount.setText(stats.deviceCount + "台设备");
+                        tvAlertCount.setText(stats.faultDeviceCount + "个预警");
+                    });
+                }
+                
+                @Override
+                public void onError(String errorMessage) {
+                    runOnUiThread(() -> {
+                        // 使用默认数据
+                        tvFarmCount.setText("3个养殖场");
+                        tvDeviceCount.setText("15台设备");
+                        tvAlertCount.setText("2个预警");
+                    });
+                }
+            });
+        } else {
+            // 使用默认数据
+            tvFarmCount.setText("3个养殖场");
+            tvDeviceCount.setText("15台设备");
+            tvAlertCount.setText("2个预警");
+        }
     }
 
     /**

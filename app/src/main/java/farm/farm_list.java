@@ -17,6 +17,8 @@ import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.example.modelfarm.utils.SimpleApiHelper;
+import com.example.modelfarm.utils.FarmDataDisplay;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,9 @@ public class farm_list extends AppCompatActivity {
     private RecyclerView rvFarms;
     private FarmAdapter farmAdapter;
     private List<Farm> farmList;
+    
+    // API相关
+    private SimpleApiHelper simpleApiHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +41,17 @@ public class farm_list extends AppCompatActivity {
         setContentView(R.layout.activity_farm_list);
 
         initViews();
+        initApiComponents();
         setupToolbar();
         setupRecyclerView();
         loadFarmData();
+    }
+
+    /**
+     * 初始化API组件
+     */
+    private void initApiComponents() {
+        simpleApiHelper = new SimpleApiHelper(this);
     }
 
     private void initViews() {
@@ -76,13 +89,73 @@ public class farm_list extends AppCompatActivity {
     }
 
     private void loadFarmData() {
-        // 模拟农场数据
-        farmList.clear();
-        farmList.add(new Farm("北方一号农场", "北京市朝阳区", "500亩", "主要种植蔬菜", "智能温室", "正常", "25°C", "65%"));
-        farmList.add(new Farm("南方二号农场", "上海市浦东区", "300亩", "主要种植水果", "露天种植", "正常", "28°C", "70%"));
-        farmList.add(new Farm("西部三号农场", "成都市双流区", "800亩", "主要种植粮食", "大田种植", "正常", "22°C", "60%"));
+        // 从API获取农场数据
+        simpleApiHelper.getEnterpriseFarms(new SimpleApiHelper.FarmListCallback() {
+            @Override
+            public void onSuccess(List<SimpleApiHelper.FarmData> farms) {
+                runOnUiThread(() -> {
+                    // 清空现有数据
+                    farmList.clear();
+                    
+                    // 转换API数据为本地农场模型
+                    for (SimpleApiHelper.FarmData apiFarm : farms) {
+                        Farm localFarm = convertApiFarmToLocal(apiFarm);
+                        farmList.add(localFarm);
+                    }
+                    
+                    farmAdapter.notifyDataSetChanged();
+                });
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(() -> {
+                    Toast.makeText(farm_list.this, "获取农场数据失败: " + errorMessage, Toast.LENGTH_LONG).show();
+                    // 显示空状态
+                    farmList.clear();
+                    farmAdapter.notifyDataSetChanged();
+                });
+            }
+        });
+    }
+    
+    /**
+     * 将API农场数据转换为本地农场模型
+     */
+    private Farm convertApiFarmToLocal(SimpleApiHelper.FarmData apiFarm) {
+        // 使用农场数据展示器获取显示信息
+        String area = String.format("%.1f亩", apiFarm.area);
+        String type = getFarmTypeDisplay(apiFarm.type);
+        String status = getFarmStatusDisplay(apiFarm.status);
         
-        farmAdapter.notifyDataSetChanged();
+        return new Farm(
+            apiFarm.name,
+            apiFarm.address,
+            area,
+            "智慧养殖", // 描述信息
+            type,
+            status,
+            "25°C", // 温度信息（可以从设备数据获取）
+            "65%" // 湿度信息（可以从设备数据获取）
+        );
+    }
+    
+    private String getFarmTypeDisplay(int type) {
+        switch (type) {
+            case 1: return "养殖场";
+            case 2: return "种植园";
+            case 3: return "混合农场";
+            default: return "未知";
+        }
+    }
+    
+    private String getFarmStatusDisplay(int status) {
+        switch (status) {
+            case 1: return "正常运营";
+            case 0: return "暂停运营";
+            case -1: return "已关闭";
+            default: return "未知状态";
+        }
     }
 
     // 农场数据模型
