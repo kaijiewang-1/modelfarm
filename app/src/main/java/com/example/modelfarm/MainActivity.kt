@@ -13,7 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.modelfarm.network.AuthManager
 import com.example.modelfarm.ui.theme.ModelfarmTheme
+import company.CompanyListActivity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,8 +23,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         try {
-            // 直接跳转到登录页面
-            val intent = Intent(this, logins.login::class.java)
+            val authManager = AuthManager.getInstance(this)
+            val target = if (authManager.isLoggedIn()) {
+                Intent(this, CompanyListActivity::class.java)
+            } else {
+                Intent(this, logins.login::class.java)
+            }
+            val intent = target
             startActivity(intent)
             finish()
         } catch (e: Exception) {

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
+import com.example.modelfarm.network.AuthManager;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -49,6 +50,15 @@ public class CompanyListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+
+        if (!AuthManager.getInstance(this).isLoggedIn()) {
+            Intent intent = new Intent(this, logins.login.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_company_list);
 
         initViews();
@@ -138,6 +148,7 @@ public class CompanyListActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 退出登录
+                AuthManager.getInstance(CompanyListActivity.this).logout();
                 Intent intent = new Intent(CompanyListActivity.this, logins.login.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);

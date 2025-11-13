@@ -31,7 +31,6 @@ public class OrderListActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private TextView tvTitle;
     private com.google.android.material.button.MaterialButton btnCreateOrder;
-    private com.google.android.material.button.MaterialButton btnDeleteOrder;
     private RecyclerView rvOrderList;
     private TextView tvEmptyState;
 
@@ -56,11 +55,15 @@ public class OrderListActivity extends AppCompatActivity {
         rvOrderList = findViewById(R.id.rvOrderList);
         tvEmptyState = findViewById(R.id.tvEmptyState);
         btnCreateOrder = findViewById(R.id.btnCreateOrder);
-        btnDeleteOrder = findViewById(R.id.btnDeleteOrder);
     }
 
     private void setupRecyclerView() {
-        adapter = new OrderListAdapter(orderList);
+        adapter = new OrderListAdapter(orderList, new OrderListAdapter.OnOrderActionListener() {
+            @Override
+            public void onDelete(Order order) {
+                confirmDelete(order);
+            }
+        });
         rvOrderList.setLayoutManager(new LinearLayoutManager(this));
         rvOrderList.setAdapter(adapter);
     }
@@ -79,15 +82,6 @@ public class OrderListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     android.content.Intent intent = new android.content.Intent(OrderListActivity.this, OrderCreateActivity.class);
                     startActivity(intent);
-                }
-            });
-        }
-
-        if (btnDeleteOrder != null) {
-            btnDeleteOrder.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDeleteDialog();
                 }
             });
         }
@@ -120,64 +114,19 @@ public class OrderListActivity extends AppCompatActivity {
         loadOrders();
     }
 
-    private void showDeleteDialog() {
-        final android.widget.EditText input = new android.widget.EditText(this);
-        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        input.setHint("输入要删除的工单ID");
-
+    private void confirmDelete(final Order order) {
+        String content = "#"+order.getId()+"\n标题: "+order.getTitle()+"\n描述: "+order.getDescription()+"\n状态: "+order.getStatus()+"\n创建时间: "+order.getCreatedAt();
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("删除工单")
-                .setMessage("请输入工单ID，将展示内容并确认删除。")
-                .setView(input)
+                .setTitle("确认删除该工单？")
+                .setMessage(content)
                 .setNegativeButton("取消", null)
-                .setPositiveButton("下一步", new android.content.DialogInterface.OnClickListener() {
+                .setPositiveButton("删除", new android.content.DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(android.content.DialogInterface dialog, int which) {
-                        String text = input.getText()!=null? input.getText().toString().trim(): "";
-                        if (text.isEmpty()) {
-                            android.widget.Toast.makeText(OrderListActivity.this, "请输入ID", android.widget.Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        try {
-                            int id = Integer.parseInt(text);
-                            previewAndConfirmDelete(id);
-                        } catch (NumberFormatException e) {
-                            android.widget.Toast.makeText(OrderListActivity.this, "ID格式错误", android.widget.Toast.LENGTH_SHORT).show();
-                        }
+                        performDelete(order.getId());
                     }
                 })
                 .show();
-    }
-
-    private void previewAndConfirmDelete(final int orderId) {
-        OrderApiService api = RetrofitClient.create(this, OrderApiService.class);
-        api.getOrder(orderId).enqueue(new Callback<ApiResponse<Order>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Order>> call, Response<ApiResponse<Order>> response) {
-                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
-                    Order o = response.body().getData();
-                    String content = "#"+o.getId()+"\n标题: "+o.getTitle()+"\n描述: "+o.getDescription()+"\n状态: "+o.getStatus()+"\n创建时间: "+o.getCreatedAt();
-                    new androidx.appcompat.app.AlertDialog.Builder(OrderListActivity.this)
-                            .setTitle("确认删除该工单？")
-                            .setMessage(content)
-                            .setNegativeButton("取消", null)
-                            .setPositiveButton("删除", new android.content.DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(android.content.DialogInterface dialog, int which) {
-                                    performDelete(orderId);
-                                }
-                            })
-                            .show();
-                } else {
-                    android.widget.Toast.makeText(OrderListActivity.this, "未找到该工单", android.widget.Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<Order>> call, Throwable t) {
-                android.widget.Toast.makeText(OrderListActivity.this, "网络错误:"+t.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-            }
-        });
     }
 
     private void performDelete(int orderId) {

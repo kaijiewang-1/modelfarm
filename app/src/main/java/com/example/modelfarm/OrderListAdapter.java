@@ -15,9 +15,15 @@ import java.util.List;
 public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.OrderViewHolder> {
 
     private final List<Order> orderList;
+    private final OnOrderActionListener actionListener;
 
     public OrderListAdapter(List<Order> orderList) {
+        this(orderList, null);
+    }
+
+    public OrderListAdapter(List<Order> orderList, OnOrderActionListener listener) {
         this.orderList = orderList;
+        this.actionListener = listener;
     }
 
     @NonNull
@@ -37,12 +43,13 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
         return orderList.size();
     }
 
-    static class OrderViewHolder extends RecyclerView.ViewHolder {
+    class OrderViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvTitle;
         private final TextView tvStatus;
         private final TextView tvCreatedAt;
         private final TextView tvDescription;
         private final TextView tvId;
+        private final android.widget.ImageButton btnDelete;
 
         OrderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -51,6 +58,7 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvCreatedAt = itemView.findViewById(R.id.tvCreatedAt);
             tvDescription = itemView.findViewById(R.id.tvDescription);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
 
         void bind(Order o) {
@@ -59,6 +67,17 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
             tvDescription.setText(o.getDescription());
             tvCreatedAt.setText(o.getCreatedAt());
             tvStatus.setText(statusText(o.getStatus()));
+
+            if (btnDelete != null) {
+                btnDelete.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (actionListener != null) {
+                            actionListener.onDelete(o);
+                        }
+                    }
+                });
+            }
         }
 
         private String statusText(int status) {
@@ -69,6 +88,10 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
                 default: return String.valueOf(status);
             }
         }
+    }
+
+    public interface OnOrderActionListener {
+        void onDelete(Order order);
     }
 }
 

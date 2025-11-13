@@ -22,12 +22,15 @@ import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.services.EnterpriseApiService;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.EnterpriseStats;
+
+import company.company_info;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 import farm.farm_list;
 import logins.login;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
 
 /**
@@ -76,6 +79,7 @@ public class DashboardActivity extends AppCompatActivity {
         initApiComponents();
         initAnimations();
         initPreferences();
+        initBottomNavigation();
         setupClickListeners();
         updateRealTimeData();
         startDataUpdate();
@@ -115,6 +119,33 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void initPreferences() {
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+    }
+
+    private void initBottomNavigation() {
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        if (bottomNavigationView == null) {
+            return;
+        }
+
+        bottomNavigationView.setSelectedItemId(R.id.menu_dashboard);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_dashboard) {
+                return true;
+            } else if (itemId == R.id.menu_devices) {
+                startActivity(new Intent(DashboardActivity.this, DeviceManagementActivity.class));
+            } else if (itemId == R.id.menu_farms) {
+                startActivity(new Intent(DashboardActivity.this, farm_list.class));
+            } else if (itemId == R.id.menu_orders) {
+                startActivity(new Intent(DashboardActivity.this, OrderListActivity.class));
+            } else if (itemId == R.id.menu_company) {
+                startActivity(new Intent(DashboardActivity.this, company_info.class));
+            } else {
+                return false;
+            }
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            return true;
+        });
     }
 
     private void checkFirstVisit() {

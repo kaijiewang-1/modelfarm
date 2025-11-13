@@ -46,7 +46,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- 操作区：创建/删除工单 按钮 -->
+    <!-- 操作区：仅保留创建工单按钮 -->
     <LinearLayout
         android:id="@+id/actions"
         android:layout_width="0dp"
@@ -66,14 +66,6 @@
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:text="创建工单"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDeleteOrder"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
-            android:text="删除工单"/>
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

@@ -68,6 +68,12 @@ public class login extends AppCompatActivity {
         
         try {
             EdgeToEdge.enable(this);
+
+            if (AuthManager.getInstance(this).isLoggedIn()) {
+                navigateToCompanySelection(false);
+                return;
+            }
+
             setContentView(R.layout.activity_login);
 
             initViews();
@@ -268,10 +274,7 @@ public class login extends AppCompatActivity {
                         saveCredentials(phone);
                         // 进入主界面
                         new android.os.Handler().postDelayed(() -> {
-                            Intent intent = new Intent(login.this, company.CompanyListActivity.class);
-                            startActivity(intent);
-                            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-                            finish();
+                            navigateToCompanySelection(true);
                         }, 1000);
                     } else {
                         String msg = response.body()!=null ? response.body().getMessage() : "登录失败，请重试";
@@ -393,6 +396,15 @@ public class login extends AppCompatActivity {
         }
         
         Toast.makeText(login.this, "输入信息已清空", Toast.LENGTH_SHORT).show();
+    }
+
+    private void navigateToCompanySelection(boolean withAnimation) {
+        Intent intent = new Intent(login.this, company.CompanyListActivity.class);
+        startActivity(intent);
+        if (withAnimation) {
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        }
+        finish();
     }
 
     @Override
