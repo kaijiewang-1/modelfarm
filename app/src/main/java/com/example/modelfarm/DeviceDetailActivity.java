@@ -30,16 +30,13 @@ import com.google.android.material.card.MaterialCardView;
  */
 public class DeviceDetailActivity extends AppCompatActivity {
 
-    private ImageButton btnBack;
+    private com.google.android.material.appbar.MaterialToolbar toolbar;
     private TextView tvTitle;
     private TextView tvDeviceType;
     private TextView tvInstallLocation;
     private TextView tvDeviceStatus;
     private TextView tvLastMaintenance;
     private MaterialCardView cardBasicInfo;
-    private MaterialCardView cardDataCurve;
-    private MaterialCardView cardDeviceControl;
-    private MaterialCardView cardDeviceMaintenance;
     private MaterialButton btnDeleteDevice;
     private MaterialButton btnCreateOrder;
     private MaterialButton btnCopyJson;
@@ -68,16 +65,13 @@ public class DeviceDetailActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        btnBack = findViewById(R.id.btnBack);
+        toolbar = findViewById(R.id.toolbar);
         tvTitle = findViewById(R.id.tvTitle);
         tvDeviceType = findViewById(R.id.tvDeviceType);
         tvInstallLocation = findViewById(R.id.tvInstallLocation);
         tvDeviceStatus = findViewById(R.id.tvDeviceStatus);
         tvLastMaintenance = findViewById(R.id.tvLastMaintenance);
         cardBasicInfo = findViewById(R.id.cardBasicInfo);
-        cardDataCurve = findViewById(R.id.cardDataCurve);
-        cardDeviceControl = findViewById(R.id.cardDeviceControl);
-        cardDeviceMaintenance = findViewById(R.id.cardDeviceMaintenance);
         btnDeleteDevice = findViewById(R.id.btnDeleteDevice);
         btnCreateOrder = findViewById(R.id.btnCreateOrder);
         btnCopyJson = findViewById(R.id.btnCopyJson);
@@ -152,34 +146,10 @@ public class DeviceDetailActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnBack.setOnClickListener(new View.OnClickListener() {
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
-            }
-        });
-
-        // 数据曲线
-        cardDataCurve.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDataCurve();
-            }
-        });
-
-        // 设备控制
-        cardDeviceControl.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDeviceControl();
-            }
-        });
-
-        // 设备维护
-        cardDeviceMaintenance.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDeviceMaintenance();
             }
         });
 
@@ -222,20 +192,7 @@ public class DeviceDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void showDataCurve() {
-        Toast.makeText(this, "查看数据曲线功能", Toast.LENGTH_SHORT).show();
-        // TODO: 实现数据曲线查看功能
-    }
 
-    private void showDeviceControl() {
-        Toast.makeText(this, "设备控制功能", Toast.LENGTH_SHORT).show();
-        // TODO: 实现设备控制功能
-    }
-
-    private void showDeviceMaintenance() {
-        Toast.makeText(this, "设备维护功能", Toast.LENGTH_SHORT).show();
-        // TODO: 实现设备维护功能
-    }
 
     private void showDeleteConfirmDialog() {
         // 显示删除确认对话框

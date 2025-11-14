@@ -1,56 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F5F5F5">
-
-    <!-- 顶部工具栏 -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/material_dynamic_primary"
-        app:title="农场管理"
-        app:titleTextColor="@android:color/white"
-        app:navigationIcon="@drawable/ic_arrow_back"
-        app:navigationIconTint="@android:color/white" />
+    android:background="#F5F5F5"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingBottom="96dp">
 
-        <!-- 添加农场按钮 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_add_farm"
+        <!-- 顶部工具栏 -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="添加农场"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_add"
-            app:iconGravity="textStart"
-            app:cornerRadius="8dp"
-            android:layout_marginBottom="16dp" />
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/material_dynamic_primary"
+            app:title="农场管理"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@android:color/white" />
 
-        <!-- 显示农场JSON按钮 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_show_farms_json"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="显示农场JSON"
-            android:layout_marginBottom="12dp" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <!-- 农场列表 -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_farms"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <!-- 添加农场按钮 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_farm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="添加农场"
+                android:textSize="16sp"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart"
+                app:cornerRadius="8dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- 显示农场JSON按钮 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_show_farms_json"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="显示农场JSON"
+                android:layout_marginBottom="12dp" />
+
+            <!-- 农场列表 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_farms"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@android:color/white"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:menu="@menu/menu_bottom_navigation" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

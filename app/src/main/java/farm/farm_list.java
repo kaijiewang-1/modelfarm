@@ -15,8 +15,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
+import com.example.modelfarm.DeviceManagementActivity;
+import com.example.modelfarm.OrderListActivity;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import company.company_info;
+import personal.profile;
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.services.EnterpriseApiService;
 import com.example.modelfarm.network.models.ApiResponse;
@@ -54,6 +59,7 @@ public class farm_list extends AppCompatActivity {
         initApiComponents();
         setupToolbar();
         setupRecyclerView();
+        initBottomNavigation();
         loadEnterpriseUsers();
     }
 
@@ -80,6 +86,34 @@ public class farm_list extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+        });
+    }
+
+    private void initBottomNavigation() {
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        if (bottomNavigationView == null) {
+            return;
+        }
+
+        bottomNavigationView.setSelectedItemId(R.id.menu_farms);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_farms) {
+                return true;
+            } else if (itemId == R.id.menu_dashboard) {
+                startActivity(new Intent(farm_list.this, DashboardActivity.class));
+            } else if (itemId == R.id.menu_devices) {
+                startActivity(new Intent(farm_list.this, DeviceManagementActivity.class));
+            } else if (itemId == R.id.menu_orders) {
+                startActivity(new Intent(farm_list.this, OrderListActivity.class));
+            } else if (itemId == R.id.menu_company) {
+                startActivity(new Intent(farm_list.this, company_info.class));
+            }  else {
+                return false;
+            }
+            finish();
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            return true;
         });
     }
 

@@ -24,6 +24,7 @@ import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.EnterpriseStats;
 
 import company.company_info;
+import personal.profile;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -140,7 +141,8 @@ public class DashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(DashboardActivity.this, OrderListActivity.class));
             } else if (itemId == R.id.menu_company) {
                 startActivity(new Intent(DashboardActivity.this, company_info.class));
-            } else {
+            }
+               else {
                 return false;
             }
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);

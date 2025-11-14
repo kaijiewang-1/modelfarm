@@ -3,38 +3,36 @@ package com.example.modelfarm;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.button.MaterialButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.modelfarm.R;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.button.MaterialButton;
 import com.example.modelfarm.network.RetrofitClient;
-import com.example.modelfarm.network.services.DeviceApiService;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.network.models.DeviceTypeEnum;
 import com.example.modelfarm.network.models.PageResponse;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import com.example.modelfarm.network.services.DeviceApiService;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import company.company_info;
+import personal.profile;
+import farm.farm_list;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DeviceManagementActivity extends AppCompatActivity {
 
@@ -61,6 +59,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
         initApiComponents();
         setupToolbar();
         setupRecyclerView();
+        initBottomNavigation();
         loadDeviceData();
     }
 
@@ -90,16 +89,74 @@ public class DeviceManagementActivity extends AppCompatActivity {
         });
     }
 
+    private void initBottomNavigation() {
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        if (bottomNavigationView == null) {
+            return;
+        }
+
+        bottomNavigationView.setSelectedItemId(R.id.menu_devices);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_devices) {
+                return true;
+            } else if (itemId == R.id.menu_dashboard) {
+                startActivity(new Intent(DeviceManagementActivity.this, DashboardActivity.class));
+            } else if (itemId == R.id.menu_farms) {
+                startActivity(new Intent(DeviceManagementActivity.this, farm_list.class));
+            } else if (itemId == R.id.menu_orders) {
+                startActivity(new Intent(DeviceManagementActivity.this, OrderListActivity.class));
+            } else if (itemId == R.id.menu_company) {
+                startActivity(new Intent(DeviceManagementActivity.this, company_info.class));
+            } else {
+                return false;
+            }
+            finish();
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            return true;
+        });
+    }
+
     private void setupRecyclerView() {
         deviceList = new ArrayList<>();
         deviceAdapter = new DeviceAdapter(deviceList, new DeviceAdapter.OnDeviceClickListener() {
             @Override
             public void onDeviceClick(Device device) {
-                Toast.makeText(DeviceManagementActivity.this, "点击了设备: " + device.getName(), Toast.LENGTH_SHORT).show();
+                if (device.getType() == DeviceTypeEnum.CAMERA) {
+                    openLiveStream(device);
+                } else {
+                    openDeviceDetail(device);
+                }
             }
         });
         rvDevices.setLayoutManager(new LinearLayoutManager(this));
         rvDevices.setAdapter(deviceAdapter);
+    }
+
+    private void openLiveStream(Device device) {
+        String pushName = device.getPushName();
+        if (TextUtils.isEmpty(pushName)) {
+            Toast.makeText(this, "该摄像头缺少推流名称，无法打开直播", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Intent intent = new Intent(this, LiveStreamActivity.class);
+        intent.putExtra("device_id", device.getId());
+        intent.putExtra("device_name", device.getName());
+        intent.putExtra("push_name", pushName);
+        if (!TextUtils.isEmpty(device.getUrl())) {
+            intent.putExtra("stream_url", device.getUrl());
+        }
+        startActivity(intent);
+    }
+
+    private void openDeviceDetail(Device device) {
+        Intent intent = new Intent(this, DeviceDetailActivity.class);
+        intent.putExtra("device_id", device.getId());
+        intent.putExtra("device_name", device.getName());
+        intent.putExtra("device_type", device.getTypeText());
+        intent.putExtra("device_status", device.getStatusText());
+        startActivity(intent);
     }
 
     @Override

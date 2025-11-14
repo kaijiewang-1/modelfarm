@@ -77,6 +77,10 @@
         <activity
             android:name=".DeviceDetailActivity"
             android:exported="false" />
+        <activity
+            android:name=".LiveStreamActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape" />
         
         <activity
             android:name="company.CompanyListActivity"

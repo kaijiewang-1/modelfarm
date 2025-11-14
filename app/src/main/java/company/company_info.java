@@ -13,7 +13,12 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
+import com.example.modelfarm.DeviceManagementActivity;
+import com.example.modelfarm.OrderListActivity;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import personal.profile;
+import farm.farm_list;
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.Enterprise;
@@ -44,6 +49,7 @@ public class company_info extends AppCompatActivity {
 
         initViews();
         setupToolbar();
+        initBottomNavigation();
         loadCompanyData();
     }
 
@@ -70,6 +76,34 @@ public class company_info extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+        });
+    }
+
+    private void initBottomNavigation() {
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        if (bottomNavigationView == null) {
+            return;
+        }
+
+        bottomNavigationView.setSelectedItemId(R.id.menu_company);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_company) {
+                return true;
+            } else if (itemId == R.id.menu_dashboard) {
+                startActivity(new Intent(company_info.this, DashboardActivity.class));
+            } else if (itemId == R.id.menu_devices) {
+                startActivity(new Intent(company_info.this, DeviceManagementActivity.class));
+            } else if (itemId == R.id.menu_farms) {
+                startActivity(new Intent(company_info.this, farm_list.class));
+            } else if (itemId == R.id.menu_orders) {
+                startActivity(new Intent(company_info.this, OrderListActivity.class));
+            }  else {
+                return false;
+            }
+            finish();
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            return true;
         });
     }
 

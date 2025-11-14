@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">modelfarm</string>
+    <string name="back">返回</string>
+    <string name="refresh">刷新</string>
+    <string name="live_stream_title">实时直播</string>
+    <string name="update_secret">更新密钥</string>
+    <string name="stop_stream">停止播放</string>
+    <string name="stream_status_idle">等待播放</string>
+    <string name="stream_status_connecting">正在连接直播流…</string>
+    <string name="stream_status_playing">直播进行中</string>
+    <string name="stream_status_stopped">播放已停止</string>
+    <string name="stream_status_error">直播播放失败</string>
+    <string name="stream_status_missing_secret">缺少密钥，无法拼接推流地址</string>
+    <string name="stream_overlay_missing_secret">请前往配置台获取最新密钥后点击“更新密钥”输入</string>
+    <string name="stream_overlay_error">视频播放失败，请检查网络或推流状态</string>
+    <string name="stream_secret_dialog_title">更新推流密钥</string>
+    <string name="stream_secret_dialog_hint">请输入配置台中的 secret</string>
+    <string name="stream_secret_dialog_cancel">取消</string>
+    <string name="stream_secret_dialog_confirm">保存</string>
+    <string name="stream_secret_saved">密钥已更新</string>
+    <string name="stream_url_placeholder">推流地址暂不可用</string>
+    <string name="stream_push_name_label">推流名称：%1$s</string>
+    <string name="stream_secret_empty_warning">密钥不能为空</string>
+    <string name="stream_manual_refresh_hint">已重新尝试连接直播</string>
+    <string name="stream_stop_hint">已停止播放</string>
 </resources>

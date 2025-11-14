@@ -14,9 +14,14 @@ import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.Order;
 import com.example.modelfarm.network.services.OrderApiService;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import company.company_info;
+import personal.profile;
+import farm.farm_list;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -46,6 +51,7 @@ public class OrderListActivity extends AppCompatActivity {
         initViews();
         setupRecyclerView();
         setupClicks();
+        initBottomNavigation();
         loadOrders();
     }
 
@@ -85,6 +91,34 @@ public class OrderListActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void initBottomNavigation() {
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        if (bottomNavigationView == null) {
+            return;
+        }
+
+        bottomNavigationView.setSelectedItemId(R.id.menu_orders);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_orders) {
+                return true;
+            } else if (itemId == R.id.menu_dashboard) {
+                startActivity(new android.content.Intent(OrderListActivity.this, DashboardActivity.class));
+            } else if (itemId == R.id.menu_devices) {
+                startActivity(new android.content.Intent(OrderListActivity.this, DeviceManagementActivity.class));
+            } else if (itemId == R.id.menu_farms) {
+                startActivity(new android.content.Intent(OrderListActivity.this, farm_list.class));
+            } else if (itemId == R.id.menu_company) {
+                startActivity(new android.content.Intent(OrderListActivity.this, company_info.class));
+            } else {
+                return false;
+            }
+            finish();
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            return true;
+        });
     }
 
     private void loadOrders() {

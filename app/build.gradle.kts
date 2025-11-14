@@ -61,6 +61,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("com.google.android.exoplayer:exoplayer:2.18.7")
+    implementation("com.google.android.exoplayer:exoplayer-ui:2.18.7")
+    implementation("com.google.android.exoplayer:extension-rtmp:2.18.7")
     
     // Network dependencies
     implementation(libs.retrofit)
@@ -68,6 +71,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
+    implementation(libs.androidx.media3.exoplayer)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

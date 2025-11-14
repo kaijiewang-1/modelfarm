@@ -13,9 +13,14 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
+import com.example.modelfarm.DeviceManagementActivity;
+import com.example.modelfarm.OrderListActivity;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import company.company_info;
+import farm.farm_list;
 
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.ApiResponse;
@@ -49,7 +54,6 @@ public class profile extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_profile);
-
         initViews();
         setupToolbar();
         loadUserData();
@@ -68,9 +72,8 @@ public class profile extends AppCompatActivity {
         tvUpdatedAt = findViewById(R.id.tv_updated_at);
         tvDeletedAt = findViewById(R.id.tv_deleted_at);
         tvApiPath = findViewById(R.id.tv_api_path);
-        tvRawJson = findViewById(R.id.tv_raw_json);
-        btnCopyJson = findViewById(R.id.btn_copy_json);
-
+//        tvRawJson = findViewById(R.id.tv_raw_json);
+//        btnCopyJson = findViewById(R.id.btn_copy_json);
         if (tvApiPath != null) {
             tvApiPath.setText("接口: GET /user");
         }
@@ -87,6 +90,7 @@ public class profile extends AppCompatActivity {
             }
         });
     }
+
 
     private void loadUserData() {
         UserApiService api = RetrofitClient.create(this, UserApiService.class);
