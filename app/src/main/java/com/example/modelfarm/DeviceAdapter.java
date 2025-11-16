@@ -3,6 +3,7 @@ package com.example.modelfarm;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,6 +24,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
     public interface OnDeviceClickListener {
         void onDeviceClick(Device device);
+        void onDeviceDelete(Device device);
     }
 
     public DeviceAdapter(List<Device> deviceList, OnDeviceClickListener listener) {
@@ -55,6 +57,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         private TextView tvDeviceName;
         private TextView tvDeviceStatus;
         private TextView tvDeviceValue;
+        private ImageButton btnDelete;
 
         public DeviceViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -63,6 +66,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             tvDeviceName = itemView.findViewById(R.id.tv_device_name);
             tvDeviceStatus = itemView.findViewById(R.id.tv_device_status);
             tvDeviceValue = itemView.findViewById(R.id.tv_device_value);
+            btnDelete = itemView.findViewById(R.id.btn_delete_device);
         }
 
         public void bind(Device device, OnDeviceClickListener listener) {
@@ -84,6 +88,16 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 public void onClick(View v) {
                     if (listener != null) {
                         listener.onDeviceClick(device);
+                    }
+                }
+            });
+
+            // 设置删除按钮监听器
+            btnDelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onDeviceDelete(device);
                     }
                 }
             });

@@ -54,6 +54,16 @@
 
             </LinearLayout>
 
+            <ImageButton
+                android:id="@+id/btn_delete_farm"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_delete"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="删除农场"
+                android:padding="4dp" />
+
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"

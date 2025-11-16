@@ -70,6 +70,11 @@ public class DeviceListActivity extends AppCompatActivity {
                     openDeviceDetail(device);
                 }
             }
+
+            @Override
+            public void onDeviceDelete(Device device) {
+                // 在设备列表页面不提供删除功能
+            }
         });
         rvDeviceList.setLayoutManager(new LinearLayoutManager(this));
         rvDeviceList.setAdapter(adapter);

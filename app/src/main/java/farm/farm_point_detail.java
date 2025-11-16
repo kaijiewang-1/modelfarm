@@ -91,6 +91,11 @@ public class farm_point_detail extends AppCompatActivity {
             public void onDeviceClick(Device device) {
                 Toast.makeText(farm_point_detail.this, "点击了设备: " + device.getName(), Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void onDeviceDelete(Device device) {
+                // 在养殖点详情页面不提供删除功能
+            }
         });
         rvDevices.setLayoutManager(new LinearLayoutManager(this));
         rvDevices.setAdapter(deviceAdapter);
