@@ -36,7 +36,7 @@ interface FarmApiService {
     /**
      * 获取企业农场列表
      */
-    @GET("/farm/enterprise")
+    @GET("/enterprise/farms")
     fun getEnterpriseFarms(): Call<ApiResponse<List<Farm>>>
     
     /**
