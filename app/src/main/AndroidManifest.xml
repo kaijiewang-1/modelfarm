@@ -80,8 +80,7 @@
         <activity
             android:name=".LiveStreamActivity"
             android:exported="false"
-            android:screenOrientation="sensorLandscape" />
-        
+            android:screenOrientation="fullSensor"/>
         <activity
             android:name="company.CompanyListActivity"
             android:exported="false" />

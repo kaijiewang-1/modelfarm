@@ -117,7 +117,15 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 添加设备按钮 -->
-
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_device"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="添加设备" />
 
         <!-- 显示服务器数据(JSON)按钮 -->
         <com.google.android.material.button.MaterialButton
@@ -143,6 +151,7 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:labelVisibilityMode="labeled"
         android:layout_gravity="bottom"
         android:background="@android:color/white"
         app:itemIconTint="@color/bottom_nav_item_color"

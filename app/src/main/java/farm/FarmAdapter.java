@@ -3,6 +3,7 @@ package farm;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,7 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
 
     public interface OnFarmClickListener {
         void onFarmClick(farm_list.Farm farm);
+        void onFarmDelete(farm_list.Farm farm);
     }
 
     public FarmAdapter(List<farm_list.Farm> farmList, OnFarmClickListener listener) {
@@ -56,6 +58,7 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
         private final TextView tvFarmHumidity;
         private final TextView tvFarmStatus;
         private final TextView tvFarmDescription;
+        private final ImageButton btnDelete;
 
         public FarmViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -68,6 +71,7 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
             tvFarmHumidity = itemView.findViewById(R.id.tv_farm_humidity);
             tvFarmStatus = itemView.findViewById(R.id.tv_farm_status);
             tvFarmDescription = itemView.findViewById(R.id.tv_farm_description);
+            btnDelete = itemView.findViewById(R.id.btn_delete_farm);
         }
 
         public void bind(farm_list.Farm farm) {
@@ -92,6 +96,16 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
                 public void onClick(View v) {
                     if (listener != null) {
                         listener.onFarmClick(farm);
+                    }
+                }
+            });
+
+            // 设置删除按钮监听器
+            btnDelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onFarmDelete(farm);
                     }
                 }
             });
