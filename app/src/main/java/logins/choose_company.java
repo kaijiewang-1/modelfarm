@@ -1,6 +1,7 @@
 package logins;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -20,6 +21,7 @@ public class choose_company extends AppCompatActivity {
     private Button btnCreateCompany;
     private Button btnJoinCompany;
     private Button btnSkip;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
