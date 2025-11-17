@@ -25,6 +25,11 @@ data class LoginResponse(
     val enterpriseId: Int,
     val satoken: SaToken
 )
+data class RegisterResponse(
+    val userId: Long,
+    val enterpriseId: Long,
+    val satoken: SaToken
+)
 
 /**
  * Sa-Token模型

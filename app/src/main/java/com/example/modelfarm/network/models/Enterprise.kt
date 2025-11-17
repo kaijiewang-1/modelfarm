@@ -71,7 +71,7 @@ data class EnterpriseUser(
     val enterpriseId: Int,
     val username: String,
     val phone: String,
-    val status: Int,
+    val status: String,
     val createdAt: String,
     val updatedAt: String,
     val deletedAt: String?
