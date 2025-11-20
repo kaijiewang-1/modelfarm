@@ -266,6 +266,7 @@ public class login extends AppCompatActivity {
                             AuthManager.getInstance(login.this).saveLoginInfo(loginData);
                             // 兼容保留本地偏好（可选）
                             SharedPreferences.Editor editor = preferences.edit();
+
                             editor.putString("auth_token", loginData.getSatoken().getTokenValue());
                             editor.putInt("current_user_id", loginData.getUserId());
                             editor.putInt("enterprise_id", loginData.getEnterpriseId());
