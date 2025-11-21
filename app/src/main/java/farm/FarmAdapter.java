@@ -52,10 +52,7 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
         private final MaterialCardView cardFarm;
         private final TextView tvFarmName;
         private final TextView tvFarmLocation;
-        private final TextView tvFarmArea;
         private final TextView tvFarmType;
-        private final TextView tvFarmTemperature;
-        private final TextView tvFarmHumidity;
         private final TextView tvFarmStatus;
         private final TextView tvFarmDescription;
         private final ImageButton btnDelete;
@@ -65,10 +62,7 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
             cardFarm = itemView.findViewById(R.id.card_farm);
             tvFarmName = itemView.findViewById(R.id.tv_farm_name);
             tvFarmLocation = itemView.findViewById(R.id.tv_farm_location);
-            tvFarmArea = itemView.findViewById(R.id.tv_farm_area);
             tvFarmType = itemView.findViewById(R.id.tv_farm_type);
-            tvFarmTemperature = itemView.findViewById(R.id.tv_farm_temperature);
-            tvFarmHumidity = itemView.findViewById(R.id.tv_farm_humidity);
             tvFarmStatus = itemView.findViewById(R.id.tv_farm_status);
             tvFarmDescription = itemView.findViewById(R.id.tv_farm_description);
             btnDelete = itemView.findViewById(R.id.btn_delete_farm);
@@ -77,10 +71,7 @@ public class FarmAdapter extends RecyclerView.Adapter<FarmAdapter.FarmViewHolder
         public void bind(farm_list.Farm farm) {
             tvFarmName.setText(farm.getName());
             tvFarmLocation.setText(farm.getLocation());
-            tvFarmArea.setText(farm.getArea());
             tvFarmType.setText(farm.getType());
-            tvFarmTemperature.setText(farm.getTemperature());
-            tvFarmHumidity.setText(farm.getHumidity());
             tvFarmStatus.setText(farm.getStatus());
             tvFarmDescription.setText(farm.getDescription());
 

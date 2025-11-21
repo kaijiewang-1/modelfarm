@@ -1,35 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="?attr/colorOnSurface">
-  <!-- Top horizontal rail -->
+    android:viewportHeight="24">
+
+  <!-- 五根圆角竖栏 -->
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M2,7.5h20v1.5h-20z"/>
-  <!-- Bottom horizontal rail -->
+      android:fillColor="#4CAF50"
+      android:pathData="M5,5
+                          a1.2,1.2 0 0 1 2.4,0
+                          v12
+                          h-2.4
+                          z" />
+
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M2,15h20v1.5h-20z"/>
-  <!-- Picket 1 (left) -->
+      android:fillColor="#4CAF50"
+      android:pathData="M8.6,5
+                          a1.2,1.2 0 0 1 2.4,0
+                          v12
+                          h-2.4
+                          z" />
+
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M2,7.5 L3,7.5 L3.5,5 L3,2.5 L2,2.5 Z M2,7.5 L3,7.5 L3,15 L2,15 Z"/>
-  <!-- Picket 2 -->
+      android:fillColor="#4CAF50"
+      android:pathData="M12.2,5
+                          a1.2,1.2 0 0 1 2.4,0
+                          v12
+                          h-2.4
+                          z" />
+
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M6,7.5 L7,7.5 L7.5,5 L7,2.5 L6,2.5 Z M6,7.5 L7,7.5 L7,15 L6,15 Z"/>
-  <!-- Picket 3 (center) -->
+      android:fillColor="#4CAF50"
+      android:pathData="M15.8,5
+                          a1.2,1.2 0 0 1 2.4,0
+                          v12
+                          h-2.4
+                          z" />
+
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M10,7.5 L11,7.5 L11.5,5 L11,2.5 L10,2.5 Z M10,7.5 L11,7.5 L11,15 L10,15 Z"/>
-  <!-- Picket 4 -->
+      android:fillColor="#4CAF50"
+      android:pathData="M19.4,5
+                          a1.2,1.2 0 0 1 2.4,0
+                          v12
+                          h-2.4
+                          z" />
+
+  <!-- 顶部横栏 -->
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M14,7.5 L15,7.5 L15.5,5 L15,2.5 L14,2.5 Z M14,7.5 L15,7.5 L15,15 L14,15 Z"/>
-  <!-- Picket 5 (right) -->
+      android:fillColor="#4CAF50"
+      android:pathData="M4,9.2
+                          h16
+                          v2.1
+                          h-16
+                          z" />
+
+  <!-- 底部横栏 -->
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M18,7.5 L19,7.5 L19.5,5 L19,2.5 L18,2.5 Z M18,7.5 L19,7.5 L19,15 L18,15 Z"/>
+      android:fillColor="#4CAF50"
+      android:pathData="M4,14.7
+                          h16
+                          v2.1
+                          h-16
+                          z" />
+
 </vector>
