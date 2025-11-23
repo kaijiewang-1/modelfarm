@@ -323,10 +323,10 @@ class FarmRepository(private val context: Context) {
         farmSiteId: Int,
         callback: CreateFarmCallback
     ) {
-        farmSiteApiService.deleteFarmSite(farmSiteId).enqueue(object : Callback<ApiResponse<Nothing>> {
+        farmSiteApiService.deleteFarmSite(farmSiteId).enqueue(object : Callback<ApiResponse<Void>> {
             override fun onResponse(
-                call: Call<ApiResponse<Nothing>>,
-                response: Response<ApiResponse<Nothing>>
+                call: Call<ApiResponse<Void>>,
+                response: Response<ApiResponse<Void>>
             ) {
                 if (response.isSuccessful && response.body()?.code == 200) {
                     callback.onSuccess(farmSiteId)
@@ -336,7 +336,7 @@ class FarmRepository(private val context: Context) {
                 }
             }
             
-            override fun onFailure(call: Call<ApiResponse<Nothing>>, t: Throwable) {
+            override fun onFailure(call: Call<ApiResponse<Void>>, t: Throwable) {
                 callback.onError(t.message ?: "网络请求失败")
             }
         })

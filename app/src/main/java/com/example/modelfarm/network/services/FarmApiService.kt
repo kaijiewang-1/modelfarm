@@ -73,7 +73,7 @@ interface FarmSiteApiService {
      * 删除养殖点
      */
     @DELETE("/farmSite")
-    fun deleteFarmSite(@Query("farmSiteId") farmSiteId: Int): Call<ApiResponse<Nothing>>
+    fun deleteFarmSite(@Query("farmSiteId") farmSiteId: Int): Call<ApiResponse<Void>>
     
     /**
      * 获取养殖点设备列表
