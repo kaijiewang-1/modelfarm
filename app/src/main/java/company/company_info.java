@@ -41,6 +41,9 @@ public class company_info extends AppCompatActivity {
     private TextView tvUpdatedAt;
     private TextView tvDeletedAt;
 
+    private TextView tvCurrentinvitedCode;
+    private TextView btGenerateInvitedCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +54,8 @@ public class company_info extends AppCompatActivity {
         setupToolbar();
         initBottomNavigation();
         loadCompanyData();
+        loadLatestInvitedCode();
+        setupButtonListeners();
     }
 
     private void initViews() {
@@ -65,6 +70,8 @@ public class company_info extends AppCompatActivity {
         tvCreatedAt = findViewById(R.id.tv_created_at);
         tvUpdatedAt = findViewById(R.id.tv_updated_at);
         tvDeletedAt = findViewById(R.id.tv_deleted_at);
+        tvCurrentinvitedCode = findViewById(R.id.tv_current_invited_code);
+        btGenerateInvitedCode = findViewById(R.id.btn_generate_invited_code);
     }
 
     private void setupToolbar() {
@@ -107,6 +114,17 @@ public class company_info extends AppCompatActivity {
         });
     }
 
+    private void setupButtonListeners() {
+        if (btGenerateInvitedCode != null) {
+            btGenerateInvitedCode.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    generateInvitedCode();
+                }
+            });
+        }
+    }
+
     private void loadCompanyData() {
         EnterpriseApiService api = RetrofitClient.create(this, EnterpriseApiService.class);
         api.getEnterprise().enqueue(new Callback<ApiResponse<Enterprise>>() {
@@ -137,6 +155,71 @@ public class company_info extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ApiResponse<Enterprise>> call, Throwable t) {
+                android.widget.Toast.makeText(company_info.this, "网络错误:" + t.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void loadLatestInvitedCode() {
+        EnterpriseApiService api = RetrofitClient.create(this, EnterpriseApiService.class);
+        api.getLatestInvitedCode().enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                runOnUiThread(() -> {
+                    if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                        // 成功获取最新邀请码
+                        String invitedCode = response.body().getData();
+                        if (tvCurrentinvitedCode != null) {
+                            tvCurrentinvitedCode.setText(invitedCode);
+                        }
+                    } else if (response.code() == 404) {
+                        // 邀请码不存在，这是正常情况
+                        if (tvCurrentinvitedCode != null) {
+                            tvCurrentinvitedCode.setText("暂无邀请码");
+                        }
+                    } else {
+                        // 其他错误
+                        String msg;
+                        try {
+                            msg = response.errorBody()!=null ? response.errorBody().string() : (response.body()!=null?response.body().getMessage():"请求失败");
+                        } catch (Exception ex) { msg = "请求失败"; }
+                        android.widget.Toast.makeText(company_info.this, "获取最新邀请码失败: " + msg, android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                android.widget.Toast.makeText(company_info.this, "网络错误:" + t.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void generateInvitedCode() {
+        EnterpriseApiService api = RetrofitClient.create(this, EnterpriseApiService.class);
+        api.generateInvitedCode().enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                runOnUiThread(() -> {
+                    if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
+                        // 成功生成邀请码
+                        String invitedCode = response.body().getData();
+                        if (tvCurrentinvitedCode != null) {
+                            tvCurrentinvitedCode.setText(invitedCode);
+                        }
+                        android.widget.Toast.makeText(company_info.this, "邀请码生成成功: " + invitedCode, android.widget.Toast.LENGTH_LONG).show();
+                    } else {
+                        String msg;
+                        try {
+                            msg = response.errorBody()!=null ? response.errorBody().string() : (response.body()!=null?response.body().getMessage():"请求失败");
+                        } catch (Exception ex) { msg = "请求失败"; }
+                        android.widget.Toast.makeText(company_info.this, "生成邀请码失败: " + msg, android.widget.Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
                 android.widget.Toast.makeText(company_info.this, "网络错误:" + t.getMessage(), android.widget.Toast.LENGTH_LONG).show();
             }
         });

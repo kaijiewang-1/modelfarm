@@ -73,7 +73,7 @@ interface UserApiService {
      * 用户加入企业
      */
     @POST("/user/join")
-    fun joinEnterprise(@Body request: JoinEnterpriseRequest): Call<ApiResponse<Nothing>>
+    fun joinEnterprise(@Body request: JoinEnterpriseRequest): Call<ApiResponse<Void>>
 }
 
 /**

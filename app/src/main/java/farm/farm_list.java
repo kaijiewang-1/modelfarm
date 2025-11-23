@@ -223,7 +223,7 @@ public class farm_list extends AppCompatActivity {
      * 将API农场数据适配为本地Farm（适配你的原UI模型）
      */
     private Farm convertApiFarmToLocal(com.example.modelfarm.network.models.EnterpriseFarm apiFarm) {
-        String area = "-";
+
         String type = getFarmTypeDisplay(1);
         String status = getFarmStatusDisplay(1);
         String supervisor = userIdToName.containsKey(apiFarm.getSupervisorId()) ? userIdToName.get(apiFarm.getSupervisorId()) : "-";
@@ -231,12 +231,9 @@ public class farm_list extends AppCompatActivity {
             apiFarm.getId(),
             apiFarm.getName(),
             apiFarm.getAddress(),
-            area,
             "负责人: " + supervisor,
             type,
-            status,
-            "--",
-            "--"
+            status
         );
     }
     
@@ -263,35 +260,27 @@ public class farm_list extends AppCompatActivity {
         private final int id;
         private final String name;
         private final String location;
-        private final String area;
         private final String description;
         private final String type;
         private final String status;
-        private final String temperature;
-        private final String humidity;
 
-        public Farm(int id, String name, String location, String area, String description, 
-                   String type, String status, String temperature, String humidity) {
+
+        public Farm(int id, String name, String location, String description,
+                   String type, String status) {
             this.id = id;
             this.name = name;
             this.location = location;
-            this.area = area;
             this.description = description;
             this.type = type;
             this.status = status;
-            this.temperature = temperature;
-            this.humidity = humidity;
         }
 
         public int getId() { return id; }
         public String getName() { return name; }
         public String getLocation() { return location; }
-        public String getArea() { return area; }
         public String getDescription() { return description; }
         public String getType() { return type; }
         public String getStatus() { return status; }
-        public String getTemperature() { return temperature; }
-        public String getHumidity() { return humidity; }
     }
 
     private void showFarmsJsonDialog() {

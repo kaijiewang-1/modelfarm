@@ -46,7 +46,6 @@ public class farm_detail extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_farm_detail);
-
         initViews();
         setupToolbar();
         setupRecyclerView();
