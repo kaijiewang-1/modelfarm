@@ -78,7 +78,7 @@
         android:layout_height="48dp"
         android:layout_marginTop="16dp"
         android:text="加入企业"
-        app:backgroundTint="@color/green_50"
+        app:backgroundTint="@color/green_700"
         app:layout_constraintTop_toBottomOf="@id/tilCode"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
