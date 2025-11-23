@@ -417,11 +417,18 @@ public class profile extends AppCompatActivity {
      * 退出登录并跳转到登录页面
      */
     private void logoutAndGoToLogin() {
-        // 清除本地存储的token等信息
+        // 清除所有本地存储的用户信息
         android.content.SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
         prefs.edit().clear().apply();
+        
+        // 清除SmartFarmPrefs中的登录信息
+        android.content.SharedPreferences smartFarmPrefs = getSharedPreferences("SmartFarmPrefs", MODE_PRIVATE);
+        smartFarmPrefs.edit().clear().apply();
+        
+        // 清除AuthManager中的登录状态
+        com.example.modelfarm.network.AuthManager.getInstance(this).logout();
 
-        // 跳转到登录页面
+        // 跳转到登录页面，清除所有Activity栈
         Intent intent = new Intent(profile.this, logins.login.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

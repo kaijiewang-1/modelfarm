@@ -16,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.DashboardActivity;
 import com.example.modelfarm.R;
+import com.example.modelfarm.network.AuthManager;
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.JoinEnterpriseRequest;
@@ -79,51 +80,62 @@ public class join_company extends AppCompatActivity {
         UserApiService api = RetrofitClient.create(this, UserApiService.class);
         JoinEnterpriseRequest request = new JoinEnterpriseRequest(inviteCode);
         
-        api.joinEnterprise(request).enqueue(new Callback<ApiResponse<Void>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                runOnUiThread(() -> {
-                    // 恢复按钮状态
-                    btnJoin.setEnabled(true);
-                    btnJoin.setText("加入企业");
-                    
-                    if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
-                        // 成功加入企业
-                        Toast.makeText(join_company.this, "成功加入企业，请重新登录", Toast.LENGTH_LONG).show();
+        // 确保AuthManager已正确初始化，避免空指针异常
+        try {
+            api.joinEnterprise(request).enqueue(new Callback<ApiResponse<Void>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                    runOnUiThread(() -> {
+                        // 恢复按钮状态
+                        btnJoin.setEnabled(true);
+                        btnJoin.setText("加入企业");
                         
-                        // 根据API说明，加入成功后需要重新登录
-                        // 跳转到登录页面
-                        Intent intent = new Intent(join_company.this, login.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        // 处理错误响应
-                        String errorMessage = "加入企业失败";
-                        if (response.body() != null && response.body().getMessage() != null) {
-                            errorMessage = response.body().getMessage();
-                        } else if (response.errorBody() != null) {
-                            try {
-                                errorMessage = response.errorBody().string();
-                            } catch (Exception e) {
-                                errorMessage = "请求失败，错误码: " + response.code();
+                        if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
+                            // 成功加入企业
+                            Toast.makeText(join_company.this, "成功加入企业，请重新登录", Toast.LENGTH_LONG).show();
+                            
+                            // 登出当前账户
+                            AuthManager.getInstance(join_company.this).logout();
+                            
+                            // 根据API说明，加入成功后需要重新登录
+                            // 跳转到登录页面
+                            Intent intent = new Intent(join_company.this, login.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // 处理错误响应
+                            String errorMessage = "加入企业失败";
+                            if (response.body() != null && response.body().getMessage() != null) {
+                                errorMessage = response.body().getMessage();
+                            } else if (response.errorBody() != null) {
+                                try {
+                                    errorMessage = response.errorBody().string();
+                                } catch (Exception e) {
+                                    errorMessage = "请求失败，错误码: " + response.code();
+                                }
                             }
+                            Toast.makeText(join_company.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
-                        Toast.makeText(join_company.this, errorMessage, Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
+                    });
+                }
 
-            @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
-                runOnUiThread(() -> {
-                    // 恢复按钮状态
-                    btnJoin.setEnabled(true);
-                    btnJoin.setText("加入企业");
-                    
-                    Toast.makeText(join_company.this, "网络错误: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                    runOnUiThread(() -> {
+                        // 恢复按钮状态
+                        btnJoin.setEnabled(true);
+                        btnJoin.setText("加入企业");
+                        
+                        Toast.makeText(join_company.this, "网络错误: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
+        } catch (Exception e) {
+            // 恢复按钮状态
+            btnJoin.setEnabled(true);
+            btnJoin.setText("加入企业");
+            Toast.makeText(join_company.this, "请求异常: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 }

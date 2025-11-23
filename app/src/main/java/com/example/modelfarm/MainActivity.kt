@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         try {
             val authManager = AuthManager.getInstance(this)
             val target = if (authManager.isLoggedIn()) {
-                Intent(this, CompanyListActivity::class.java)
+                Intent(this, DashboardActivity::class.java)
             } else {
                 Intent(this, logins.login::class.java)
             }

@@ -69,8 +69,11 @@ public class login extends AppCompatActivity {
         try {
             EdgeToEdge.enable(this);
 
+            // 提前初始化 SharedPreferences
+            preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
             if (AuthManager.getInstance(this).isLoggedIn()) {
-                navigateToCompanySelection(false);
+                redirectBasedOnEnterpriseId(false);
                 return;
             }
 
@@ -99,9 +102,6 @@ public class login extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         ivLogo = findViewById(R.id.ivLogo);
         // tvWelcome = findViewById(R.id.tvWelcome); // 暂时注释掉，布局中没有这个ID
-        
-        // 初始化SharedPreferences
-        preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         
         // 初始化数据库登录助手
         // databaseLoginHelper = new DatabaseLoginHelper(this);
@@ -273,9 +273,9 @@ public class login extends AppCompatActivity {
                             editor.apply();
                         }
                         saveCredentials(phone);
-                        // 进入主界面
+                        // 根据企业ID决定跳转目标
                         new android.os.Handler().postDelayed(() -> {
-                            navigateToCompanySelection(true);
+                            redirectBasedOnEnterpriseId(true);
                         }, 1000);
                     } else {
                         String msg = response.body()!=null ? response.body().getMessage() : "登录失败，请重试";
@@ -401,6 +401,31 @@ public class login extends AppCompatActivity {
 
     private void navigateToCompanySelection(boolean withAnimation) {
         Intent intent = new Intent(login.this, company.CompanyListActivity.class);
+        startActivity(intent);
+        if (withAnimation) {
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        }
+        finish();
+    }
+
+    /**
+     * 根据企业ID决定跳转目标
+     * enterpriseId == 0: 跳转到企业列表（选择或加入企业）
+     * enterpriseId != 0: 跳转到主控制台（已加入企业）
+     */
+    private void redirectBasedOnEnterpriseId(boolean withAnimation) {
+        // 从SharedPreferences获取企业ID
+        int enterpriseId = preferences.getInt("enterprise_id", 0);
+        
+        Intent intent;
+        if (enterpriseId == 0) {
+            // 未加入企业，跳转到企业列表页面
+            intent = new Intent(login.this, company.CompanyListActivity.class);
+        } else {
+            // 已加入企业，直接跳转到主控制台
+            intent = new Intent(login.this, DashboardActivity.class);
+        }
+        
         startActivity(intent);
         if (withAnimation) {
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
