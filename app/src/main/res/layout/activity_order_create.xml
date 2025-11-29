@@ -56,32 +56,20 @@
                         android:gravity="top|start" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <LinearLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:layout_marginTop="12dp"
-                    android:gravity="center_vertical">
+                    android:hint="工单状态"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <AutoCompleteTextView
+                        android:id="@+id/sp_status"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="状态"
-                        android:textSize="14sp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1">
-
-                        <AutoCompleteTextView
-                            android:id="@+id/sp_status"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
+                        android:inputType="none"
+                        android:minHeight="48dp" />
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

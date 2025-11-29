@@ -26,6 +26,10 @@
         <activity
             android:name="farm.farm_point_detail"
             android:exported="false" />
+        <activity android:name=".OrderDispatchActivity"
+            android:exported="false"/>
+        <activity android:name=".OrderDetailActivity"
+            android:exported="false"/>
         <activity
             android:name="farm.farm_detail"
             android:exported="false" />
