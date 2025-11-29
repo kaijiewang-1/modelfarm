@@ -61,17 +61,22 @@ public class  OrderCreateActivity extends AppCompatActivity {
     }
 
     private void setupStatusDropdown() {
-        String[] items = new String[]{"1-待处理", "2-已完成", "3-紧急处理"};
+        // 创建工单时只能选择待处理或紧急处理，不能直接创建已完成状态的工单
+        String[] items = new String[]{"待处理", "紧急处理"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         spStatus.setAdapter(adapter);
         spStatus.setOnItemClickListener((parent, view, position, id) -> {
-            switch (position) {
-                case 0: currentStatus = OrderStatus.PENDING; break;
-                case 1: currentStatus = OrderStatus.COMPLETED; break;
-                case 2: currentStatus = OrderStatus.URGENT; break;
+            if (position == 0) {
+                currentStatus = OrderStatus.PENDING;
+            } else if (position == 1) {
+                currentStatus = OrderStatus.URGENT;
+            } else {
+                currentStatus = OrderStatus.PENDING; // 默认待处理
             }
         });
+        // 默认选择待处理
         spStatus.setText(items[0], false);
+        currentStatus = OrderStatus.PENDING;
     }
 
     private void prefillFromIntent() {

@@ -44,4 +44,28 @@ interface OrderApiService {
      */
     @POST("/order/complete")
     fun completeOrder(@Query("id") id: Int): Call<ApiResponse<Void>>
+    
+    /**
+     * 派单给指定用户
+     */
+    @POST("/order/dispatch")
+    fun dispatchOrder(@Body request: DispatchOrderRequest): Call<ApiResponse<Void>>
+    
+    /**
+     * 用户认领工单
+     */
+    @POST("/order/accept")
+    fun acceptOrder(@Body request: AcceptOrderRequest): Call<ApiResponse<Void>>
+    
+    /**
+     * 根据用户ID获取认领的工单列表
+     */
+    @GET("/order/user")
+    fun getOrdersByUserId(@Query("userId") userId: Int): Call<ApiResponse<List<Order>>>
+    
+    /**
+     * 工单打卡
+     */
+    @POST("/order/checkin")
+    fun checkInOrder(@Body request: CheckInOrderRequest): Call<ApiResponse<Void>>
 }

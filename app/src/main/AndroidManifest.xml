@@ -71,6 +71,12 @@
             android:name=".OrderListActivity"
             android:exported="false" />
         <activity
+            android:name=".OrderDispatchActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OrderDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".DeviceListActivity"
             android:exported="false" />
         <activity
