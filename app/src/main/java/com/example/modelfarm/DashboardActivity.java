@@ -20,6 +20,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.R;
 import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.SaToken;
+import com.example.modelfarm.network.services.AdminApiService;
 import com.example.modelfarm.network.services.EnterpriseApiService;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.EnterpriseStats;
@@ -48,7 +50,7 @@ public class DashboardActivity extends AppCompatActivity {
     private MaterialCardView cardProfile;
     private MaterialCardView cardOrderManagement;
     private Button btnEnvMonitor;
-
+    private MaterialCardView cardAdmin;
     // 实时数据显示
     private TextView tvTemperature;
     private TextView tvHumidity;
@@ -60,17 +62,17 @@ public class DashboardActivity extends AppCompatActivity {
     // 数据更新处理器
     private Handler dataUpdateHandler = new Handler();
     private Runnable dataUpdateRunnable;
-    
+
     // API相关
     private EnterpriseApiService enterpriseApi;
-    
+    private AdminApiService adminApiService;
     // 动画和交互
     private Animation cardClickAnimation;
     private Animation fadeInAnimation;
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "SmartFarmPrefs";
     private static final String KEY_FIRST_VISIT = "first_visit";
-    
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +97,7 @@ public class DashboardActivity extends AppCompatActivity {
      */
     private void initApiComponents() {
         enterpriseApi = RetrofitClient.create(this, EnterpriseApiService.class);
+        adminApiService = RetrofitClient.create(this, AdminApiService.class);
     }
 
     private void initViews() {
@@ -104,6 +107,7 @@ public class DashboardActivity extends AppCompatActivity {
         cardCompanyInfo = findViewById(R.id.card_company_info);
         cardProfile = findViewById(R.id.card_profile);
         cardOrderManagement = findViewById(R.id.card_order_management);
+        cardAdmin = findViewById(R.id.card_admin);
         btnEnvMonitor = findViewById(R.id.btn_env_detail);
         // 实时数据显示
         tvTemperature = findViewById(R.id.tv_temperature);
@@ -143,8 +147,7 @@ public class DashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(DashboardActivity.this, OrderListActivity.class));
             } else if (itemId == R.id.menu_company) {
                 startActivity(new Intent(DashboardActivity.this, company_info.class));
-            }
-               else {
+            } else {
                 return false;
             }
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
@@ -166,14 +169,14 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         //进入环境监控页
-        btnEnvMonitor.setOnClickListener( new View.OnClickListener() {
+        btnEnvMonitor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 v.startAnimation(cardClickAnimation);
                 Intent intent = new Intent(DashboardActivity.this, EnvironmentMonitoringEnhancedActivity.class);
                 try {
                     startActivity(intent);
-                }catch (Exception e) {
+                } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
@@ -234,9 +237,37 @@ public class DashboardActivity extends AppCompatActivity {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
         });
-
+        //进入管理员页面
+        cardAdmin.setOnClickListener(new View.OnClickListener() {
+                                         @Override
+                                         public void onClick(View v) {
+                                             checkAdmin(v);
+                                         }
+                                     }
+        );
     }
 
+    private void checkAdmin(View v) {
+        adminApiService.check().enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                if (response.body().getCode() == 200) {
+                    v.startAnimation(cardClickAnimation);
+                    Intent intent = new Intent(DashboardActivity.this, AdminActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                }else{
+                    Toast.makeText(DashboardActivity.this, "无企业权限", 1).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable throwable) {
+                Toast.makeText(DashboardActivity.this, "无企业权限", 1).show();
+            }
+        });
+
+    }
 
     /**
      * 更新实时数据
@@ -257,6 +288,7 @@ public class DashboardActivity extends AppCompatActivity {
                     setDefaultStats();
                 }
             }
+
             @Override
             public void onFailure(Call<ApiResponse<EnterpriseStats>> call, Throwable t) {
                 setDefaultStats();
