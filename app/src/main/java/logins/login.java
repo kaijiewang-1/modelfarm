@@ -137,7 +137,7 @@ public class login extends AppCompatActivity {
         etPassword.setHint("请输入密码");
         
         // 设置登录按钮文本
-        btnLogin.setText("登录智慧养殖系统");
+        btnLogin.setText("登录");
         
         // 设置欢迎文本
         // tvWelcome.setText("欢迎使用智慧养殖系统"); // 暂时注释掉
@@ -209,7 +209,7 @@ public class login extends AppCompatActivity {
                         runOnUiThread(() -> {
                             showLoadingState(false);
                             if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
-                                showSuccessMessage("登录成功，欢迎使用智慧养殖系统");
+                                showSuccessMessage("登录成功，欢迎使用数智化养殖软件平台");
                                 // 保存 token、userId 信息
                                 LoginResponse loginData = response.body().getData();
                                 if (loginData != null) {
@@ -325,7 +325,7 @@ public class login extends AppCompatActivity {
                 runOnUiThread(() -> {
                     showLoadingState(false);
                     if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
-                        showSuccessMessage("登录成功，欢迎使用智慧养殖系统");
+                        showSuccessMessage("登录成功，欢迎使用数智化养殖软件平台");
                         // 保存 token、userId 信息
                         LoginResponse loginData = response.body().getData();
                         if (loginData != null) {
@@ -440,7 +440,7 @@ public class login extends AppCompatActivity {
             progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
         btnLogin.setEnabled(!show);
-        btnLogin.setText(show ? "登录中..." : "登录智慧养殖系统");
+        btnLogin.setText(show ? "登录中..." : "登录成功");
     }
 
     /**

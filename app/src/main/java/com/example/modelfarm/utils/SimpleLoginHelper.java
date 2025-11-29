@@ -47,7 +47,7 @@ public class SimpleLoginHelper {
                 if (validateLogin(phone, password)) {
                     // 保存登录状态
                     saveLoginState(phone);
-                    callback.onSuccess("登录成功，欢迎使用智慧养殖系统");
+                    callback.onSuccess("登录成功，欢迎使用数智化养殖软件平台");
                 } else {
                     callback.onError("用户名或密码错误，请重试");
                 }

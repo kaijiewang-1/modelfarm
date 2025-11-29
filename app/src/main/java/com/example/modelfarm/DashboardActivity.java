@@ -164,7 +164,7 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void showWelcomeGuide() {
-        Toast.makeText(this, "欢迎使用智慧养殖系统！点击各功能模块开始使用", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "欢迎使用数智化养殖软件平台！点击各功能模块开始使用", Toast.LENGTH_LONG).show();
     }
 
     private void setupClickListeners() {
@@ -275,7 +275,7 @@ public class DashboardActivity extends AppCompatActivity {
     private void updateRealTimeData() {
         tvTemperature.setText("5°C");
         tvHumidity.setText("68%");
-        tvWelcome.setText("欢迎使用智慧养殖系统");
+        tvWelcome.setText("欢迎使用数智化养殖软件平台");
         enterpriseApi.getEnterpriseStats().enqueue(new Callback<ApiResponse<EnterpriseStats>>() {
             @Override
             public void onResponse(Call<ApiResponse<EnterpriseStats>> call, Response<ApiResponse<EnterpriseStats>> response) {
