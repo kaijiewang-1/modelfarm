@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ public class DashboardActivity extends AppCompatActivity {
     private MaterialCardView cardCompanyInfo;
     private MaterialCardView cardProfile;
     private MaterialCardView cardOrderManagement;
+    private Button btnEnvMonitor;
 
     // 实时数据显示
     private TextView tvTemperature;
@@ -102,7 +104,7 @@ public class DashboardActivity extends AppCompatActivity {
         cardCompanyInfo = findViewById(R.id.card_company_info);
         cardProfile = findViewById(R.id.card_profile);
         cardOrderManagement = findViewById(R.id.card_order_management);
-
+        btnEnvMonitor = findViewById(R.id.btn_env_detail);
         // 实时数据显示
         tvTemperature = findViewById(R.id.tv_temperature);
         tvHumidity = findViewById(R.id.tv_humidity);
@@ -163,6 +165,21 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        //进入环境监控页
+        btnEnvMonitor.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                v.startAnimation(cardClickAnimation);
+                Intent intent = new Intent(DashboardActivity.this, EnvironmentMonitoringEnhancedActivity.class);
+                try {
+                    startActivity(intent);
+                }catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            }
+        });
+
         // 设备管理 - 智能设备监控
         cardDeviceManagement.setOnClickListener(new View.OnClickListener() {
             @Override

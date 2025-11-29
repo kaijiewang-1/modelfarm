@@ -63,7 +63,9 @@
         <activity
             android:name=".DeviceManagementActivity"
             android:exported="false" />
-        
+        <activity
+            android:name=".EnvironmentMonitoringEnhancedActivity"
+            android:exported="false"/>
         <activity
             android:name=".OrderCreateActivity"
             android:exported="false" />

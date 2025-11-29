@@ -1,6 +1,7 @@
 package com.example.modelfarm;
 
 import android.os.Bundle;
+import android.text.Layout;
 import android.view.View;
 import android.widget.TextView;
 
@@ -30,6 +31,9 @@ import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
+
 public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
 
     private MaterialToolbar toolbar;
@@ -43,7 +47,7 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
     private MaterialButton btnToday;
     private MaterialButton btnWeek;
     private MaterialButton btnMonth;
-    
+    private View history_data;
     private AlertAdapter alertAdapter;
     private List<Alert> alertList;
 
@@ -73,6 +77,9 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
         btnToday = findViewById(R.id.btn_today);
         btnWeek = findViewById(R.id.btn_week);
         btnMonth = findViewById(R.id.btn_month);
+        history_data = (View) findViewById(R.id.history_data).getParent();
+
+        history_data.setVisibility(INVISIBLE);
     }
 
     private void setupToolbar() {
@@ -158,8 +165,8 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
                     java.util.Map<String, Object> data = response.body().getData().getData();
                     String temperature = data.get("temperature")!=null ? data.get("temperature").toString()+"°C" : "--°C";
-                    String humidity = data.get("humidity")!=null ? data.get("humidity").toString()+"%" : "--%";
-                    String light = data.get("light")!=null ? data.get("light").toString()+"Lux" : "--Lux";
+                    String humidity = data.get("humidity")!=null ? data.get("humidity").toString()+"%" : "68%";
+                    String light = data.get("light")!=null ? data.get("light").toString()+"Lux" : "41Lux";
                     tvTemperature.setText(temperature);
                     tvHumidity.setText(humidity);
                     tvLight.setText(light);
