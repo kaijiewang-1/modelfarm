@@ -45,6 +45,7 @@ public class login extends AppCompatActivity {
     private EditText etPhone;
     private EditText etPassword;
     private Button btnLogin;
+    private Button btnTourist;
     private TextView tvGoRegister;
     private TextView tvReset;
     private TextView tvForgotPassword;
@@ -96,6 +97,7 @@ public class login extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
+        btnTourist=findViewById(R.id.btnTourist);
         tvGoRegister = findViewById(R.id.tvGoRegister);
         tvReset = findViewById(R.id.tvReset);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
@@ -179,6 +181,71 @@ public class login extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        btnTourist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (fadeInAnimation != null) {
+                    v.startAnimation(fadeInAnimation);
+                }
+                String phone = "13800138007";
+                String password = "138007";
+
+                // 输入验证
+                if (phone.isEmpty() || password.isEmpty()) {
+                    showErrorWithAnimation("请输入完整的登录信息");
+                    return;
+                }
+                if (!isValidPhone(phone) && !isValidUsername(phone)) {
+                    showErrorWithAnimation("请输入正确的手机号或用户名");
+                    return;
+                }
+                showLoadingState(true);
+                // -------- 新增：Retrofit 登录请求 --------
+                UserApiService userApi = RetrofitClient.create(login.this, UserApiService.class);
+                LoginRequest request = new LoginRequest(phone, password);
+                userApi.login(request).enqueue(new Callback<ApiResponse<LoginResponse>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<LoginResponse>> call, Response<ApiResponse<LoginResponse>> response) {
+                        runOnUiThread(() -> {
+                            showLoadingState(false);
+                            if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
+                                showSuccessMessage("登录成功，欢迎使用智慧养殖系统");
+                                // 保存 token、userId 信息
+                                LoginResponse loginData = response.body().getData();
+                                if (loginData != null) {
+                                    // 统一走 AuthManager，供拦截器自动携带 satoken
+                                    AuthManager.getInstance(login.this).saveLoginInfo(loginData);
+                                    // 兼容保留本地偏好（可选）
+                                    SharedPreferences.Editor editor = preferences.edit();
+
+                                    editor.putString("auth_token", loginData.getSatoken().getTokenValue());
+                                    editor.putInt("current_user_id", loginData.getUserId());
+                                    editor.putInt("enterprise_id", loginData.getEnterpriseId());
+                                    editor.apply();
+                                }
+                                saveCredentials(phone);
+                                // 根据企业ID决定跳转目标
+                                new android.os.Handler().postDelayed(() -> {
+                                    redirectBasedOnEnterpriseId(true);
+                                }, 1000);
+                            } else {
+                                String msg = response.body()!=null ? response.body().getMessage() : "登录失败，请重试";
+                                showErrorWithAnimation(msg);
+                            }
+                        });
+                    }
+                    @Override
+                    public void onFailure(Call<ApiResponse<LoginResponse>> call, Throwable t) {
+                        runOnUiThread(() -> {
+                            showLoadingState(false);
+                            showErrorWithAnimation("网络错误: " + t.getMessage());
+                        });
+                    }
+                });
+
+
+            }
+        });
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -291,6 +358,10 @@ public class login extends AppCompatActivity {
                 });
             }
         });
+
+
+
+
     }
 
     /**

@@ -273,7 +273,7 @@ public class DashboardActivity extends AppCompatActivity {
      * 更新实时数据
      */
     private void updateRealTimeData() {
-        tvTemperature.setText("22°C");
+        tvTemperature.setText("5°C");
         tvHumidity.setText("68%");
         tvWelcome.setText("欢迎使用智慧养殖系统");
         enterpriseApi.getEnterpriseStats().enqueue(new Callback<ApiResponse<EnterpriseStats>>() {

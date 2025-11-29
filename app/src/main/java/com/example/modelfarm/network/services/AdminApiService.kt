@@ -20,7 +20,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface AdminApiService {
-
+    @GET("/admin/check")
+    fun checkAdminPermission(): Call<ApiResponse<Void>>
     /**
      * 检查管理员权限
      */

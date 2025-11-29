@@ -44,7 +44,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="赤水市鸡银行智慧养殖AI平台"
+                        android:text="数智化养殖软件平台"
                         android:textColor="@android:color/white"
                         android:textSize="20sp"
                         android:textStyle="bold"/>

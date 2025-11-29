@@ -117,6 +117,16 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- 登录按钮 -->
+        <TextView
+            android:id="@+id/tvForgotPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:text="忘记密码？"
+            android:textColor="#4CAF50"
+            android:textSize="14sp"/>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin"
             style="@style/Widget.MaterialComponents.Button"
@@ -146,16 +156,24 @@
             android:visibility="gone"/>
 
         <!-- 忘记密码 -->
-        <TextView
-            android:id="@+id/tvForgotPassword"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="忘记密码？"
-            android:textColor="#4CAF50"
-            android:textSize="14sp"
-            android:layout_gravity="end"
-            android:padding="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+        <!-- 游客登录按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTourist"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="游客模式"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            app:cornerRadius="28dp"
+            app:icon="@drawable/ic_login"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            android:layout_marginBottom="16dp"
+            android:enabled="true"
+            android:alpha="0.6"/>
 
     </LinearLayout>
 
