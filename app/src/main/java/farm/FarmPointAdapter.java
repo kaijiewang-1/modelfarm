@@ -87,7 +87,7 @@ public class FarmPointAdapter extends RecyclerView.Adapter<FarmPointAdapter.Farm
             
             // Display livestock count if available
             if (farmSite.getSum() != 0) {
-                tvPointArea.setText("容量：" + farmSite.getSum());
+                tvPointArea.setText("鸡只总数：" + farmSite.getSum());
             }
             
             tvPointTime.setText("创建时间：" + farmSite.getCreatedAt());

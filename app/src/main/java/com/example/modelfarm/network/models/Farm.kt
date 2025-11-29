@@ -41,7 +41,7 @@ data class FarmSite(
     val enterpriseId: Int,
     val farmId: Int,
     val name: String,
-    val sum: Int,
+    var sum: Int,
     val properties: Map<String, Any>?,
     val createdAt: String,
     val updatedAt: String,
