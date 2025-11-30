@@ -148,12 +148,12 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         tvUpdatedAt.setText("更新时间: " + order.getUpdatedAt());
 
-        // 只有在"我的工单"中且工单状态为已认领或紧急时，才显示完成按钮
-        boolean canComplete = (order.getStatus() == OrderStatus.CLAIMED ||
-                (order.getStatus() == OrderStatus.URGENT && order.isAccepted() == 1)) &&
-                (order.getAcceptedId() != null && order.getAcceptedId() == currentUserId);
+        // 根据接口文档：只能标记待处理(1)或紧急处理(3)状态的工单
+        // 不能标记已完成(2)状态的工单
+        int status = order.getStatus();
+        boolean canComplete = (status == OrderStatus.PENDING || status == OrderStatus.URGENT);
 
-        if (canComplete && order.getStatus() != OrderStatus.COMPLETED) {
+        if (canComplete) {
             btnComplete.setVisibility(View.VISIBLE);
         } else {
             btnComplete.setVisibility(View.GONE);
@@ -181,7 +181,7 @@ public class OrderDetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
-                    Toast.makeText(OrderDetailActivity.this, "工单已完成", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OrderDetailActivity.this, "工单标记为已完成", Toast.LENGTH_SHORT).show();
                     // 重新加载工单详情
                     loadOrderDetail();
                 } else {
