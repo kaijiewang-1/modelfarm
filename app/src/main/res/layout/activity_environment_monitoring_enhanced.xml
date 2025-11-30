@@ -73,7 +73,7 @@
                                 android:id="@+id/tv_temperature"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="25°C"
+                                android:text="5°C"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
                                 android:textColor="#FF5722"
