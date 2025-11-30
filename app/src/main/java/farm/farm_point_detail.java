@@ -27,10 +27,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.network.models.DeviceData;
+import com.example.modelfarm.network.services.DeviceDataApiService;
 import com.example.modelfarm.DeviceAdapter;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +65,11 @@ public class farm_point_detail extends AppCompatActivity {
     private Button btnEditInfo;
     private List<Device> deviceList;
     private int farmSiteId = -1;
+    
+    // 鸡只监测数据
+    private TextView tvChickenStatus;
+    private TextView tvChickenSteps;
+    private TextView tvAirQuality;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +83,7 @@ public class farm_point_detail extends AppCompatActivity {
             setupRecyclerView();
             loadPointData();
             loadDeviceData();
+            loadChickenMonitoringData();
 
     }
 
@@ -90,6 +99,11 @@ public class farm_point_detail extends AppCompatActivity {
         // btnAddDevice = findViewById(R.id.btn_add_device); // 已注释掉
         btnEditInfo = findViewById(R.id.tv_btn_update);
         rvDevices = findViewById(R.id.rv_devices);
+        
+        // 鸡只监测数据
+        tvChickenStatus = findViewById(R.id.tv_chicken_status);
+        tvChickenSteps = findViewById(R.id.tv_chicken_steps);
+        tvAirQuality = findViewById(R.id.tv_air_quality);
         btnEditInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -230,12 +244,16 @@ public class farm_point_detail extends AppCompatActivity {
                     }
                     deviceAdapter.notifyDataSetChanged();
                     updateStats();
+                    // 设备加载完成后，加载鸡只监测数据
+                    loadChickenMonitoringData();
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<java.util.List<Device>>> call, Throwable t) {
                     deviceAdapter.notifyDataSetChanged();
                     updateStats();
+                    // 即使失败也尝试加载监测数据（可能已有缓存的设备列表）
+                    loadChickenMonitoringData();
                 }
             });
         }
@@ -252,5 +270,196 @@ public class farm_point_detail extends AppCompatActivity {
         tvTotalDevices.setText(String.valueOf(total));
         tvOnlineDevices.setText(String.valueOf(online));
         tvOfflineDevices.setText(String.valueOf(offline));
+    }
+
+    /**
+     * 加载鸡只监测数据
+     * 从传感器设备中获取鸡只状态、步数、空气质量等数据
+     */
+    private void loadChickenMonitoringData() {
+        if (deviceList == null || deviceList.isEmpty()) {
+            // 如果设备列表为空，等待设备加载完成后再加载监测数据
+            return;
+        }
+
+        // 查找传感器设备（type = 2）
+        List<Device> sensorDevices = new ArrayList<>();
+        for (Device device : deviceList) {
+            if (device.getType() == 2) { // 传感器类型
+                sensorDevices.add(device);
+            }
+        }
+
+        if (sensorDevices.isEmpty()) {
+            // 没有传感器设备，显示默认值
+            if (tvChickenStatus != null) tvChickenStatus.setText("无数据");
+            if (tvChickenSteps != null) tvChickenSteps.setText("无数据");
+            if (tvAirQuality != null) tvAirQuality.setText("无数据");
+            return;
+        }
+
+        // 获取所有传感器设备的最新数据
+        final int[] completedRequests = {0};
+        final int totalRequests = sensorDevices.size();
+        final Map<String, Object>[] aggregatedData = new Map[1];
+        aggregatedData[0] = new java.util.HashMap<>();
+
+        for (Device sensorDevice : sensorDevices) {
+            DeviceDataApiService dataApi = RetrofitClient.create(this, DeviceDataApiService.class);
+            dataApi.getLatestDeviceData(sensorDevice.getId()).enqueue(new Callback<ApiResponse<DeviceData>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<DeviceData>> call, Response<ApiResponse<DeviceData>> response) {
+                    completedRequests[0]++;
+                    if (response.isSuccessful() && response.body() != null && 
+                        response.body().getCode() == 200 && response.body().getData() != null) {
+                        DeviceData deviceData = response.body().getData();
+                        if (deviceData.getData() != null) {
+                            // 合并数据
+                            aggregatedData[0].putAll(deviceData.getData());
+                        }
+                    }
+                    
+                    // 所有请求完成后，更新UI
+                    if (completedRequests[0] >= totalRequests) {
+                        updateChickenMonitoringUI(aggregatedData[0]);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<DeviceData>> call, Throwable t) {
+                    completedRequests[0]++;
+                    if (completedRequests[0] >= totalRequests) {
+                        updateChickenMonitoringUI(aggregatedData[0]);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 更新鸡只监测数据UI
+     */
+    private void updateChickenMonitoringUI(Map<String, Object> data) {
+        if (data == null || data.isEmpty()) {
+            if (tvChickenStatus != null) tvChickenStatus.setText("无数据");
+            if (tvChickenSteps != null) tvChickenSteps.setText("无数据");
+            if (tvAirQuality != null) tvAirQuality.setText("无数据");
+            return;
+        }
+
+        // 解析鸡只状态
+        String chickenStatus = parseChickenStatus(data);
+        if (tvChickenStatus != null) {
+            tvChickenStatus.setText(chickenStatus);
+        }
+
+        // 解析平均步数
+        String avgSteps = parseAverageSteps(data);
+        if (tvChickenSteps != null) {
+            tvChickenSteps.setText(avgSteps);
+        }
+
+        // 解析空气质量
+        String airQuality = parseAirQuality(data);
+        if (tvAirQuality != null) {
+            tvAirQuality.setText(airQuality);
+        }
+    }
+
+    /**
+     * 解析鸡只状态
+     */
+    private String parseChickenStatus(Map<String, Object> data) {
+        // 尝试多种可能的字段名
+        Object status = data.get("chicken_status");
+        if (status == null) status = data.get("status");
+        if (status == null) status = data.get("chickenStatus");
+        if (status == null) status = data.get("animal_status");
+        
+        if (status != null) {
+            String statusStr = status.toString();
+            // 如果是数字，转换为状态文本
+            try {
+                int statusInt = Integer.parseInt(statusStr);
+                switch (statusInt) {
+                    case 1: return "健康";
+                    case 2: return "异常";
+                    case 3: return "生病";
+                    default: return statusStr;
+                }
+            } catch (NumberFormatException e) {
+                return statusStr;
+            }
+        }
+        return "无数据";
+    }
+
+    /**
+     * 解析平均步数
+     */
+    private String parseAverageSteps(Map<String, Object> data) {
+        // 尝试多种可能的字段名
+        Object steps = data.get("avg_steps");
+        if (steps == null) steps = data.get("average_steps");
+        if (steps == null) steps = data.get("steps");
+        if (steps == null) steps = data.get("chicken_steps");
+        if (steps == null) steps = data.get("avgSteps");
+        
+        if (steps != null) {
+            try {
+                // 如果是数字，格式化显示
+                double stepsValue = Double.parseDouble(steps.toString());
+                if (stepsValue == (int) stepsValue) {
+                    return String.valueOf((int) stepsValue) + " 步";
+                } else {
+                    return String.format("%.1f 步", stepsValue);
+                }
+            } catch (NumberFormatException e) {
+                return steps.toString() + " 步";
+            }
+        }
+        return "无数据";
+    }
+
+    /**
+     * 解析空气质量
+     */
+    private String parseAirQuality(Map<String, Object> data) {
+        // 尝试多种可能的字段名
+        Object airQuality = data.get("air_quality");
+        if (airQuality == null) airQuality = data.get("airQuality");
+        if (airQuality == null) airQuality = data.get("air_quality_value");
+        if (airQuality == null) airQuality = data.get("aqi");
+        if (airQuality == null) airQuality = data.get("pm25");
+        if (airQuality == null) airQuality = data.get("pm2.5");
+        
+        if (airQuality != null) {
+            try {
+                double qualityValue = Double.parseDouble(airQuality.toString());
+                // 根据数值判断空气质量等级
+                String qualityLevel = getAirQualityLevel(qualityValue);
+                if (qualityValue == (int) qualityValue) {
+                    return String.valueOf((int) qualityValue) + " (" + qualityLevel + ")";
+                } else {
+                    return String.format("%.1f (%s)", qualityValue, qualityLevel);
+                }
+            } catch (NumberFormatException e) {
+                return airQuality.toString();
+            }
+        }
+        return "无数据";
+    }
+
+    /**
+     * 根据数值获取空气质量等级
+     */
+    private String getAirQualityLevel(double value) {
+        // 假设是AQI标准（0-500）
+        if (value <= 50) return "优";
+        else if (value <= 100) return "良";
+        else if (value <= 150) return "轻度污染";
+        else if (value <= 200) return "中度污染";
+        else if (value <= 300) return "重度污染";
+        else return "严重污染";
     }
 }

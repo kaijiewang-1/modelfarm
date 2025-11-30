@@ -120,10 +120,116 @@
                         </LinearLayout>
 
                     </LinearLayout>
+
+                    <!-- 鸡只状态和步数信息 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="8dp"
+                        android:background="#F5F5F5"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="鸡只监测数据"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#1B5E20"
+                            android:layout_marginBottom="12dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="鸡只状态："
+                                android:textSize="13sp"
+                                android:textColor="#666666" />
+
+                            <TextView
+                                android:id="@+id/tv_chicken_status"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1.5"
+                                android:text="-"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#4CAF50"
+                                android:gravity="end" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="平均步数："
+                                android:textSize="13sp"
+                                android:textColor="#666666" />
+
+                            <TextView
+                                android:id="@+id/tv_chicken_steps"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1.5"
+                                android:text="-"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#2196F3"
+                                android:gravity="end" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="空气质量："
+                                android:textSize="13sp"
+                                android:textColor="#666666" />
+
+                            <TextView
+                                android:id="@+id/tv_air_quality"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1.5"
+                                android:text="-"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#FF9800"
+                                android:gravity="end" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
                     <Button
                         android:id="@+id/tv_btn_update"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="更新鸡只数"/>
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="更新鸡只数"/>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
