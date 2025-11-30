@@ -113,10 +113,10 @@ class OrderRepository(private val context: Context) {
         callback: (Result<Unit>) -> Unit
     ) {
         val request = UpdateOrderRequest(id, title, description, status)
-        orderApiService.updateOrder(request).enqueue(object : Callback<ApiResponse<Nothing>> {
+        orderApiService.updateOrder(request).enqueue(object : Callback<ApiResponse<Void>> {
             override fun onResponse(
-                call: Call<ApiResponse<Nothing>>,
-                response: Response<ApiResponse<Nothing>>
+                call: Call<ApiResponse<Void>>,
+                response: Response<ApiResponse<Void>>
             ) {
                 if (response.isSuccessful && response.body()?.code == 200) {
                     callback(Result.success(Unit))
@@ -126,7 +126,7 @@ class OrderRepository(private val context: Context) {
                 }
             }
 
-            override fun onFailure(call: Call<ApiResponse<Nothing>>, t: Throwable) {
+            override fun onFailure(call: Call<ApiResponse<Void>>, t: Throwable) {
                 callback(Result.failure(t))
             }
         })

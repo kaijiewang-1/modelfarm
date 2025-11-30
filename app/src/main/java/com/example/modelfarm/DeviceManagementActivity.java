@@ -44,7 +44,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
     private TextView tvOnlineDevices;
     private TextView tvOfflineDevices;
     private MaterialButton btnAddDevice;
-    private MaterialButton btnShowJson;
     private RecyclerView rvDevices;
     private DeviceAdapter deviceAdapter;
     private List<Device> deviceList;
@@ -99,7 +98,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
         tvOnlineDevices = findViewById(R.id.tv_online_devices);
         tvOfflineDevices = findViewById(R.id.tv_offline_devices);
         btnAddDevice = findViewById(R.id.btn_add_device);
-        btnShowJson = findViewById(R.id.btn_show_devices_json);
         rvDevices = findViewById(R.id.rv_devices);
     }
 
@@ -192,14 +190,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
         super.onResume();
         // 返回时刷新一次
         loadDeviceData();
-        if (btnShowJson != null) {
-            btnShowJson.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDevicesJsonDialog();
-                }
-            });
-        }
     }
 
     private void loadDeviceData() {
@@ -249,38 +239,6 @@ public class DeviceManagementActivity extends AppCompatActivity {
         tvTotalDevices.setText(String.valueOf(total));
         tvOnlineDevices.setText(String.valueOf(online));
         tvOfflineDevices.setText(String.valueOf(offline));
-    }
-
-    private void showDevicesJsonDialog() {
-        try {
-            com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
-            String json = gson.toJson(deviceList);
-            android.widget.ScrollView scroll = new android.widget.ScrollView(this);
-            android.widget.TextView tv = new android.widget.TextView(this);
-            tv.setTextIsSelectable(true);
-            tv.setText(json);
-            tv.setTextSize(12);
-            int pad = (int) (getResources().getDisplayMetrics().density * 16);
-            tv.setPadding(pad, pad, pad, pad);
-            scroll.addView(tv);
-            new androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("设备原始JSON")
-                    .setView(scroll)
-                    .setNegativeButton("关闭", null)
-                    .setPositiveButton("复制", new android.content.DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(android.content.DialogInterface dialog, int which) {
-                            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                            if (cm != null) {
-                                cm.setPrimaryClip(android.content.ClipData.newPlainText("devices_json", json));
-                                Toast.makeText(DeviceManagementActivity.this, "已复制", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    })
-                    .show();
-        } catch (Exception e) {
-            Toast.makeText(this, "展示失败", Toast.LENGTH_SHORT).show();
-        }
     }
 
     /**

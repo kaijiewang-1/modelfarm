@@ -31,7 +31,7 @@ interface OrderApiService {
      * 更新工单信息
      */
     @PUT("/order")
-    fun updateOrder(@Body request: UpdateOrderRequest): Call<ApiResponse<Nothing>>
+    fun updateOrder(@Body request: UpdateOrderRequest): Call<ApiResponse<Void>>
 
     /**
      * 删除工单

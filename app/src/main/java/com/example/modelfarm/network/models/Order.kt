@@ -19,7 +19,11 @@ data class Order(
     val completedAt: String?,
     val createdAt: String,
     val updatedAt: String,
-    val deletedAt: String?
+    val deletedAt: String?,
+    val solution: String? = null, // 解决方案描述
+    val solutionImages: String? = null, // 解决图片URLs（JSON数组或逗号分隔）
+    val inspectionIssue: String? = null, // 异常情况描述
+    val inspectionImages: String? = null // 巡查图片URLs（JSON数组或逗号分隔）
 )
 
 /**
@@ -36,9 +40,13 @@ data class CreateOrderRequest(
  */
 data class UpdateOrderRequest(
     val id: Int,
-    val title: String,
-    val description: String,
-    val status: Int
+    val title: String? = null,
+    val description: String? = null,
+    val status: Int? = null,
+    val solution: String? = null, // 解决方案描述
+    val solutionImages: String? = null, // 解决图片URLs
+    val inspectionIssue: String? = null, // 异常情况描述
+    val inspectionImages: String? = null // 巡查图片URLs
 )
 
 /**

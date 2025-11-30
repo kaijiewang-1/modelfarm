@@ -27,8 +27,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import com.example.modelfarm.network.models.Device;
-import com.example.modelfarm.network.models.DeviceData;
-import com.example.modelfarm.network.services.DeviceDataApiService;
 import com.example.modelfarm.DeviceAdapter;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -83,7 +81,6 @@ public class farm_point_detail extends AppCompatActivity {
             setupRecyclerView();
             loadPointData();
             loadDeviceData();
-            loadChickenMonitoringData();
 
     }
 
@@ -214,6 +211,9 @@ public class farm_point_detail extends AppCompatActivity {
                         tvArea.setText("鸡只总数：" + data.getSum());
                         tvCrop.setText("类型：" +(data.getProperties()==null?"鸡舍": data.getProperties().getOrDefault("capacity", "-")));
                         tvTime.setText("创建时间：" + data.getCreatedAt());
+                        
+                        // 加载鸡只监测数据（从properties中获取）
+                        loadChickenMonitoringData();
                     }
                 }
 
@@ -244,16 +244,12 @@ public class farm_point_detail extends AppCompatActivity {
                     }
                     deviceAdapter.notifyDataSetChanged();
                     updateStats();
-                    // 设备加载完成后，加载鸡只监测数据
-                    loadChickenMonitoringData();
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<java.util.List<Device>>> call, Throwable t) {
                     deviceAdapter.notifyDataSetChanged();
                     updateStats();
-                    // 即使失败也尝试加载监测数据（可能已有缓存的设备列表）
-                    loadChickenMonitoringData();
                 }
             });
         }
@@ -274,66 +270,20 @@ public class farm_point_detail extends AppCompatActivity {
 
     /**
      * 加载鸡只监测数据
-     * 从传感器设备中获取鸡只状态、步数、空气质量等数据
+     * 从养殖点的properties属性中获取鸡只状态、步数、空气质量等数据
      */
     private void loadChickenMonitoringData() {
-        if (deviceList == null || deviceList.isEmpty()) {
-            // 如果设备列表为空，等待设备加载完成后再加载监测数据
-            return;
-        }
-
-        // 查找传感器设备（type = 2）
-        List<Device> sensorDevices = new ArrayList<>();
-        for (Device device : deviceList) {
-            if (device.getType() == 2) { // 传感器类型
-                sensorDevices.add(device);
-            }
-        }
-
-        if (sensorDevices.isEmpty()) {
-            // 没有传感器设备，显示默认值
+        if (data == null || data.getProperties() == null || data.getProperties().isEmpty()) {
+            // 没有properties数据，显示默认值
             if (tvChickenStatus != null) tvChickenStatus.setText("无数据");
             if (tvChickenSteps != null) tvChickenSteps.setText("无数据");
             if (tvAirQuality != null) tvAirQuality.setText("无数据");
             return;
         }
 
-        // 获取所有传感器设备的最新数据
-        final int[] completedRequests = {0};
-        final int totalRequests = sensorDevices.size();
-        final Map<String, Object>[] aggregatedData = new Map[1];
-        aggregatedData[0] = new java.util.HashMap<>();
-
-        for (Device sensorDevice : sensorDevices) {
-            DeviceDataApiService dataApi = RetrofitClient.create(this, DeviceDataApiService.class);
-            dataApi.getLatestDeviceData(sensorDevice.getId()).enqueue(new Callback<ApiResponse<DeviceData>>() {
-                @Override
-                public void onResponse(Call<ApiResponse<DeviceData>> call, Response<ApiResponse<DeviceData>> response) {
-                    completedRequests[0]++;
-                    if (response.isSuccessful() && response.body() != null && 
-                        response.body().getCode() == 200 && response.body().getData() != null) {
-                        DeviceData deviceData = response.body().getData();
-                        if (deviceData.getData() != null) {
-                            // 合并数据
-                            aggregatedData[0].putAll(deviceData.getData());
-                        }
-                    }
-                    
-                    // 所有请求完成后，更新UI
-                    if (completedRequests[0] >= totalRequests) {
-                        updateChickenMonitoringUI(aggregatedData[0]);
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ApiResponse<DeviceData>> call, Throwable t) {
-                    completedRequests[0]++;
-                    if (completedRequests[0] >= totalRequests) {
-                        updateChickenMonitoringUI(aggregatedData[0]);
-                    }
-                }
-            });
-        }
+        // 从properties中获取数据
+        Map<String, Object> properties = data.getProperties();
+        updateChickenMonitoringUI(properties);
     }
 
     /**
@@ -370,9 +320,9 @@ public class farm_point_detail extends AppCompatActivity {
      * 解析鸡只状态
      */
     private String parseChickenStatus(Map<String, Object> data) {
-        // 尝试多种可能的字段名
-        Object status = data.get("chicken_status");
-        if (status == null) status = data.get("status");
+        // 从properties中获取status字段
+        Object status = data.get("status");
+        if (status == null) status = data.get("chicken_status");
         if (status == null) status = data.get("chickenStatus");
         if (status == null) status = data.get("animal_status");
         
@@ -388,6 +338,7 @@ public class farm_point_detail extends AppCompatActivity {
                     default: return statusStr;
                 }
             } catch (NumberFormatException e) {
+                // 直接返回状态文本（如"正常"、"良好"等）
                 return statusStr;
             }
         }
@@ -398,8 +349,10 @@ public class farm_point_detail extends AppCompatActivity {
      * 解析平均步数
      */
     private String parseAverageSteps(Map<String, Object> data) {
-        // 尝试多种可能的字段名
-        Object steps = data.get("avg_steps");
+        // 从properties中获取avaStep字段（根据图片中的格式）
+        Object steps = data.get("avaStep");
+        if (steps == null) steps = data.get("ava_step");
+        if (steps == null) steps = data.get("avg_steps");
         if (steps == null) steps = data.get("average_steps");
         if (steps == null) steps = data.get("steps");
         if (steps == null) steps = data.get("chicken_steps");
@@ -425,8 +378,10 @@ public class farm_point_detail extends AppCompatActivity {
      * 解析空气质量
      */
     private String parseAirQuality(Map<String, Object> data) {
-        // 尝试多种可能的字段名
-        Object airQuality = data.get("air_quality");
+        // 从properties中获取airInfo字段（根据图片中的格式）
+        Object airQuality = data.get("airInfo");
+        if (airQuality == null) airQuality = data.get("air_info");
+        if (airQuality == null) airQuality = data.get("air_quality");
         if (airQuality == null) airQuality = data.get("airQuality");
         if (airQuality == null) airQuality = data.get("air_quality_value");
         if (airQuality == null) airQuality = data.get("aqi");
@@ -434,9 +389,15 @@ public class farm_point_detail extends AppCompatActivity {
         if (airQuality == null) airQuality = data.get("pm2.5");
         
         if (airQuality != null) {
+            String qualityStr = airQuality.toString();
+            // 如果是文本描述（如"良好"），直接返回
+            if (qualityStr.matches("[\\u4e00-\\u9fa5]+")) {
+                return qualityStr;
+            }
+            
+            // 如果是数字，格式化显示并判断等级
             try {
-                double qualityValue = Double.parseDouble(airQuality.toString());
-                // 根据数值判断空气质量等级
+                double qualityValue = Double.parseDouble(qualityStr);
                 String qualityLevel = getAirQualityLevel(qualityValue);
                 if (qualityValue == (int) qualityValue) {
                     return String.valueOf((int) qualityValue) + " (" + qualityLevel + ")";
@@ -444,7 +405,7 @@ public class farm_point_detail extends AppCompatActivity {
                     return String.format("%.1f (%s)", qualityValue, qualityLevel);
                 }
             } catch (NumberFormatException e) {
-                return airQuality.toString();
+                return qualityStr;
             }
         }
         return "无数据";
