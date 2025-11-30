@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">modelfarm</string>
+    <string name="app_name">数智化养殖软件平台</string>
     <string name="back">返回</string>
     <string name="refresh">刷新</string>
     <string name="live_stream_title">实时直播</string>

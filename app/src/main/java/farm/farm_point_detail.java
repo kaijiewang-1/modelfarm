@@ -69,11 +69,13 @@ public class farm_point_detail extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_farm_point_detail);
 
-        initViews();
-        setupToolbar();
-        setupRecyclerView();
-        loadPointData();
-        loadDeviceData();
+
+            initViews();
+            setupToolbar();
+            setupRecyclerView();
+            loadPointData();
+            loadDeviceData();
+
     }
 
     private void initViews() {
@@ -196,7 +198,7 @@ public class farm_point_detail extends AppCompatActivity {
                         tvPointName.setText(data.getName());
 
                         tvArea.setText("鸡只总数：" + data.getSum());
-                        tvCrop.setText("类型：" + data.getProperties().getOrDefault("capacity", "-"));
+                        tvCrop.setText("类型：" +(data.getProperties()==null?"鸡舍": data.getProperties().getOrDefault("capacity", "-")));
                         tvTime.setText("创建时间：" + data.getCreatedAt());
                     }
                 }
