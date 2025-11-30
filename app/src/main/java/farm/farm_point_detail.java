@@ -43,8 +43,21 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+
+import com.example.modelfarm.network.models.MonthInoutData;
 
 public class farm_point_detail extends AppCompatActivity {
 
@@ -68,6 +81,11 @@ public class farm_point_detail extends AppCompatActivity {
     private TextView tvChickenStatus;
     private TextView tvChickenSteps;
     private TextView tvAirQuality;
+    
+    // 出入库统计图表
+    private LineChart chartInout;
+    private Spinner spinnerYear;
+    private int currentYear;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +97,8 @@ public class farm_point_detail extends AppCompatActivity {
             initViews();
             setupToolbar();
             setupRecyclerView();
+            setupYearSpinner();
+            setupChart();
             loadPointData();
             loadDeviceData();
 
@@ -107,6 +127,10 @@ public class farm_point_detail extends AppCompatActivity {
                 showInputChickenDialog();
             }
         });
+        
+        // 出入库统计图表
+        chartInout = findViewById(R.id.chart_inout);
+        spinnerYear = findViewById(R.id.spinner_year);
     }
 
     private void showInputChickenDialog() {
@@ -214,6 +238,9 @@ public class farm_point_detail extends AppCompatActivity {
                         
                         // 加载鸡只监测数据（从properties中获取）
                         loadChickenMonitoringData();
+                        
+                        // 加载出入库统计数据（默认当前年份）
+                        loadInoutData(currentYear);
                     }
                 }
 
@@ -422,5 +449,172 @@ public class farm_point_detail extends AppCompatActivity {
         else if (value <= 200) return "中度污染";
         else if (value <= 300) return "重度污染";
         else return "严重污染";
+    }
+    
+    /**
+     * 设置年份选择器
+     */
+    private void setupYearSpinner() {
+        // 生成最近5年的年份列表
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        int currentYear = calendar.get(java.util.Calendar.YEAR);
+        this.currentYear = currentYear;
+        
+        List<String> years = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            years.add(String.valueOf(currentYear - i));
+        }
+        
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, 
+            android.R.layout.simple_spinner_item, years);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerYear.setAdapter(adapter);
+        
+        // 设置年份选择监听
+        spinnerYear.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                int selectedYear = Integer.parseInt(years.get(position));
+                loadInoutData(selectedYear);
+            }
+            
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
+        });
+    }
+    
+    /**
+     * 设置图表样式
+     */
+    private void setupChart() {
+        // 禁用描述
+        chartInout.getDescription().setEnabled(false);
+        
+        // 启用触摸手势
+        chartInout.setTouchEnabled(true);
+        chartInout.setDragEnabled(true);
+        chartInout.setScaleEnabled(true);
+        chartInout.setPinchZoom(true);
+        
+        // 设置X轴
+        XAxis xAxis = chartInout.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f);
+        xAxis.setLabelCount(12);
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                int month = (int) value;
+                if (month >= 1 && month <= 12) {
+                    return month + "月";
+                }
+                return "";
+            }
+        });
+        
+        // 设置Y轴
+        YAxis leftAxis = chartInout.getAxisLeft();
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setGranularity(1f);
+        
+        YAxis rightAxis = chartInout.getAxisRight();
+        rightAxis.setEnabled(false);
+        
+        // 设置图例
+        chartInout.getLegend().setEnabled(true);
+        chartInout.getLegend().setTextSize(12f);
+    }
+    
+    /**
+     * 加载出入库统计数据
+     */
+    private void loadInoutData(int year) {
+        if (farmSiteId <= 0) {
+            return;
+        }
+        
+        FarmSiteApiService api = RetrofitClient.create(this, FarmSiteApiService.class);
+        api.getYearSiteData(year, farmSiteId).enqueue(new Callback<ApiResponse<List<MonthInoutData>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<MonthInoutData>>> call, 
+                    Response<ApiResponse<List<MonthInoutData>>> response) {
+                if (response.isSuccessful() && response.body() != null 
+                        && response.body().getCode() == 200 
+                        && response.body().getData() != null) {
+                    List<MonthInoutData> dataList = response.body().getData();
+                    updateChart(dataList);
+                } else {
+                    Toast.makeText(farm_point_detail.this, 
+                        "加载数据失败: " + (response.body() != null ? response.body().getMessage() : "未知错误"), 
+                        Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse<List<MonthInoutData>>> call, Throwable t) {
+                Toast.makeText(farm_point_detail.this, "网络请求失败: " + t.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    /**
+     * 更新图表数据
+     */
+    private void updateChart(List<MonthInoutData> dataList) {
+        if (dataList == null || dataList.isEmpty()) {
+            return;
+        }
+        
+        // 创建总数量数据集
+        List<Entry> sumEntries = new ArrayList<>();
+        List<Entry> inEntries = new ArrayList<>();
+        List<Entry> outEntries = new ArrayList<>();
+        
+        // 按月份排序（确保数据按1-12月顺序）
+        java.util.Collections.sort(dataList, (a, b) -> Integer.compare(a.getMonth(), b.getMonth()));
+        
+        for (MonthInoutData data : dataList) {
+            int month = data.getMonth();
+            sumEntries.add(new Entry(month, data.getSum()));
+            inEntries.add(new Entry(month, data.getInCount()));
+            outEntries.add(new Entry(month, data.getOutCount()));
+        }
+        
+        // 创建数据集
+        LineDataSet sumDataSet = new LineDataSet(sumEntries, "存栏量");
+        sumDataSet.setColor(android.graphics.Color.parseColor("#4CAF50"));
+        sumDataSet.setLineWidth(2f);
+        sumDataSet.setCircleColor(android.graphics.Color.parseColor("#4CAF50"));
+        sumDataSet.setCircleRadius(4f);
+        sumDataSet.setValueTextSize(10f);
+        sumDataSet.setDrawValues(false);
+        
+        LineDataSet inDataSet = new LineDataSet(inEntries, "入库数量");
+        inDataSet.setColor(android.graphics.Color.parseColor("#2196F3"));
+        inDataSet.setLineWidth(2f);
+        inDataSet.setCircleColor(android.graphics.Color.parseColor("#2196F3"));
+        inDataSet.setCircleRadius(4f);
+        inDataSet.setValueTextSize(10f);
+        inDataSet.setDrawValues(false);
+        
+        LineDataSet outDataSet = new LineDataSet(outEntries, "出库数量");
+        outDataSet.setColor(android.graphics.Color.parseColor("#FF9800"));
+        outDataSet.setLineWidth(2f);
+        outDataSet.setCircleColor(android.graphics.Color.parseColor("#FF9800"));
+        outDataSet.setCircleRadius(4f);
+        outDataSet.setValueTextSize(10f);
+        outDataSet.setDrawValues(false);
+        
+        // 添加到图表
+        List<ILineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(sumDataSet);
+        dataSets.add(inDataSet);
+        dataSets.add(outDataSet);
+        
+        LineData lineData = new LineData(dataSets);
+        chartInout.setData(lineData);
+        chartInout.invalidate(); // 刷新图表
     }
 }

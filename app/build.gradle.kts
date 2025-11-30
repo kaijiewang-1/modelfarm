@@ -72,6 +72,10 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
     implementation(libs.androidx.media3.exoplayer)
+    // MPAndroidChart - using JitPack
+    // Note: If you encounter SSL certificate issues, see BUILD_TROUBLESHOOTING.md
+    // You may need to configure proxy settings in gradle.properties
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
