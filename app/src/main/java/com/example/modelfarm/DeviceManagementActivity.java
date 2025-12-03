@@ -229,7 +229,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
         int offline = 0;
 
         for (Device device : deviceList) {
-            if ("在线".equals(device.getStatus())) {
+            if ("在线".equals(device.getStatusText())) {
                 online++;
             } else {
                 offline++;
