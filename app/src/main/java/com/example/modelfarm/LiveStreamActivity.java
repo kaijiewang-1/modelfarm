@@ -269,7 +269,19 @@ public class LiveStreamActivity extends AppCompatActivity {
             .setRenderersFactory(new DefaultRenderersFactory(this))
             .setLoadControl(loadControl)
             .build();
-        
+
+        // 创建 RenderersFactory 并配置软件解码模式
+        DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(this);
+
+        // 设置扩展渲染器模式为 PREFER (优先使用扩展/软解) 或 ON (开启)
+        // 这将允许播放器在硬件解码失败时尝试使用软件解码（如 FFmpeg）
+        renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
+
+        // 创建ExoPlayer实例，传入自定义的 renderersFactory
+        exoPlayer = new ExoPlayer.Builder(this)
+                .setRenderersFactory(renderersFactory) // 使用上面配置好的 factory
+                .setLoadControl(loadControl)
+                .build();
         exoPlayer.addListener(playerListener);
         playerView.setPlayer(exoPlayer);
         

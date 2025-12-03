@@ -64,7 +64,8 @@ dependencies {
     implementation("com.google.android.exoplayer:exoplayer:2.18.7")
     implementation("com.google.android.exoplayer:exoplayer-ui:2.18.7")
     implementation("com.google.android.exoplayer:extension-rtmp:2.18.7")
-    
+   // implementation("com.google.android.exoplayer:extension-ffmpeg:2.18.7")
+    implementation("com.github.microshow:RxFFmpeg:4.9.0-lite")
     // Network dependencies
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
