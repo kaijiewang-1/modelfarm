@@ -1,0 +1,151 @@
+<html>
+<head>
+<title>OrderCreateActivity.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #0033b3;}
+.s1 { color: #080808;}
+.s2 { color: #8c8c8c; font-style: italic;}
+.s3 { color: #067d17;}
+.s4 { color: #1750eb;}
+.ln { color: #aeb3c2; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#ffffff">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+OrderCreateActivity.java</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">package </span><span class="s1">com.example.modelfarm;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">android.os.Bundle;</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">import </span><span class="s1">android.view.View;</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">import </span><span class="s1">android.widget.ArrayAdapter;</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">import </span><span class="s1">android.widget.AutoCompleteTextView;</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">import </span><span class="s1">android.widget.Toast;</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">import </span><span class="s1">androidx.activity.EdgeToEdge;</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">import </span><span class="s1">androidx.appcompat.app.AppCompatActivity;</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">import </span><span class="s1">com.example.modelfarm.network.RetrofitClient;</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">import </span><span class="s1">com.example.modelfarm.network.models.ApiResponse;</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">import </span><span class="s1">com.example.modelfarm.network.models.CreateOrderRequest;</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">import </span><span class="s1">com.example.modelfarm.network.models.OrderStatus;</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">import </span><span class="s1">com.example.modelfarm.network.services.OrderApiService;</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">import </span><span class="s1">com.google.android.material.appbar.MaterialToolbar;</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">import </span><span class="s1">com.google.android.material.button.MaterialButton;</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">import </span><span class="s1">com.google.android.material.textfield.TextInputEditText;</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">import </span><span class="s1">retrofit2.Call;</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">import </span><span class="s1">retrofit2.Callback;</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0">import </span><span class="s1">retrofit2.Response;</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">public class  </span><span class="s1">OrderCreateActivity </span><span class="s0">extends </span><span class="s1">AppCompatActivity {</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s0">private </span><span class="s1">MaterialToolbar toolbar;</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s0">private </span><span class="s1">TextInputEditText etTitle;</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s0">private </span><span class="s1">TextInputEditText etDescription;</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s0">private </span><span class="s1">AutoCompleteTextView spStatus;</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s0">private </span><span class="s1">MaterialButton btnSubmit;</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0">private int </span><span class="s1">currentStatus = OrderStatus.PENDING; </span><span class="s2">// 默认待处理</span>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">@Override</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s0">protected void </span><span class="s1">onCreate(Bundle savedInstanceState) {</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s0">super</span><span class="s1">.onCreate(savedInstanceState);</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">EdgeToEdge.enable(</span><span class="s0">this</span><span class="s1">);</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">setContentView(R.layout.activity_order_create);</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s1">initViews();</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s1">setupToolbar();</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s1">setupStatusDropdown();</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s1">setupSubmit();</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">prefillFromIntent();</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">}</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s0">private void </span><span class="s1">initViews() {</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">toolbar = findViewById(R.id.toolbar);</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">etTitle = findViewById(R.id.et_title);</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">etDescription = findViewById(R.id.et_description);</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">spStatus = findViewById(R.id.sp_status);</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">btnSubmit = findViewById(R.id.btn_submit);</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s1">}</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s0">private void </span><span class="s1">setupToolbar() {</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s1">toolbar.setNavigationOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+<a name="l58"><span class="ln">58   </span></a>            <span class="s1">@Override</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s0">public void </span><span class="s1">onClick(View v) { finish(); }</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">});</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s1">}</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s0">private void </span><span class="s1">setupStatusDropdown() {</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s2">// 创建工单时只能选择待处理或紧急处理，不能直接创建已完成状态的工单</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">String[] items = </span><span class="s0">new </span><span class="s1">String[]{</span><span class="s3">&quot;待处理&quot;</span><span class="s1">, </span><span class="s3">&quot;紧急处理&quot;</span><span class="s1">};</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">ArrayAdapter&lt;String&gt; adapter = </span><span class="s0">new </span><span class="s1">ArrayAdapter&lt;&gt;(</span><span class="s0">this</span><span class="s1">, android.R.layout.simple_list_item_1, items);</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s1">spStatus.setAdapter(adapter);</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s1">spStatus.setOnItemClickListener((parent, view, position, id) -&gt; {</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s0">if </span><span class="s1">(position == </span><span class="s4">0</span><span class="s1">) {</span>
+<a name="l70"><span class="ln">70   </span></a>                <span class="s1">currentStatus = OrderStatus.PENDING;</span>
+<a name="l71"><span class="ln">71   </span></a>            <span class="s1">} </span><span class="s0">else if </span><span class="s1">(position == </span><span class="s4">1</span><span class="s1">) {</span>
+<a name="l72"><span class="ln">72   </span></a>                <span class="s1">currentStatus = OrderStatus.URGENT;</span>
+<a name="l73"><span class="ln">73   </span></a>            <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+<a name="l74"><span class="ln">74   </span></a>                <span class="s1">currentStatus = OrderStatus.PENDING; </span><span class="s2">// 默认待处理</span>
+<a name="l75"><span class="ln">75   </span></a>            <span class="s1">}</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s1">});</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s2">// 默认选择待处理</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s1">spStatus.setText(items[</span><span class="s4">0</span><span class="s1">], </span><span class="s0">false</span><span class="s1">);</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s1">currentStatus = OrderStatus.PENDING;</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s1">}</span>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s0">private void </span><span class="s1">prefillFromIntent() {</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s1">String hintTitle = getIntent().getStringExtra(</span><span class="s3">&quot;hint_title&quot;</span><span class="s1">);</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s1">String hintDesc = getIntent().getStringExtra(</span><span class="s3">&quot;hint_desc&quot;</span><span class="s1">);</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s0">if </span><span class="s1">(hintTitle != </span><span class="s0">null</span><span class="s1">) etTitle.setText(hintTitle);</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s0">if </span><span class="s1">(hintDesc != </span><span class="s0">null</span><span class="s1">) etDescription.setText(hintDesc);</span>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s1">}</span>
+<a name="l88"><span class="ln">88   </span></a>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s0">private void </span><span class="s1">setupSubmit() {</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">btnSubmit.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s1">@Override</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+<a name="l93"><span class="ln">93   </span></a>                <span class="s1">String title = etTitle.getText()!=</span><span class="s0">null</span><span class="s1">? etTitle.getText().toString().trim(): </span><span class="s3">&quot;&quot;</span><span class="s1">;</span>
+<a name="l94"><span class="ln">94   </span></a>                <span class="s1">String desc = etDescription.getText()!=</span><span class="s0">null</span><span class="s1">? etDescription.getText().toString().trim(): </span><span class="s3">&quot;&quot;</span><span class="s1">;</span>
+<a name="l95"><span class="ln">95   </span></a>                <span class="s0">if </span><span class="s1">(title.isEmpty() || desc.isEmpty()) {</span>
+<a name="l96"><span class="ln">96   </span></a>                    <span class="s1">Toast.makeText(OrderCreateActivity.</span><span class="s0">this</span><span class="s1">, </span><span class="s3">&quot;请填写标题与描述&quot;</span><span class="s1">, Toast.LENGTH_SHORT).show();</span>
+<a name="l97"><span class="ln">97   </span></a>                    <span class="s0">return</span><span class="s1">;</span>
+<a name="l98"><span class="ln">98   </span></a>                <span class="s1">}</span>
+<a name="l99"><span class="ln">99   </span></a>                <span class="s1">submitOrder(title, desc, currentStatus);</span>
+<a name="l100"><span class="ln">100  </span></a>            <span class="s1">}</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">});</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s1">}</span>
+<a name="l103"><span class="ln">103  </span></a>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s0">private void </span><span class="s1">submitOrder(String title, String description, </span><span class="s0">int </span><span class="s1">status) {</span>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s1">OrderApiService api = RetrofitClient.create(</span><span class="s0">this</span><span class="s1">, OrderApiService.</span><span class="s0">class</span><span class="s1">);</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s1">CreateOrderRequest request = </span><span class="s0">new </span><span class="s1">CreateOrderRequest(title, description, status);</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s1">btnSubmit.setEnabled(</span><span class="s0">false</span><span class="s1">);</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s1">btnSubmit.setText(</span><span class="s3">&quot;提交中...&quot;</span><span class="s1">);</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s1">api.createOrder(request).enqueue(</span><span class="s0">new </span><span class="s1">Callback&lt;ApiResponse&lt;Integer&gt;&gt;() {</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s1">@Override</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s0">public void </span><span class="s1">onResponse(Call&lt;ApiResponse&lt;Integer&gt;&gt; call, Response&lt;ApiResponse&lt;Integer&gt;&gt; response) {</span>
+<a name="l112"><span class="ln">112  </span></a>                <span class="s1">btnSubmit.setEnabled(</span><span class="s0">true</span><span class="s1">);</span>
+<a name="l113"><span class="ln">113  </span></a>                <span class="s1">btnSubmit.setText(</span><span class="s3">&quot;提交&quot;</span><span class="s1">);</span>
+<a name="l114"><span class="ln">114  </span></a>                <span class="s0">if </span><span class="s1">(response.isSuccessful() &amp;&amp; response.body()!=</span><span class="s0">null </span><span class="s1">&amp;&amp; response.body().getCode()==</span><span class="s4">200</span><span class="s1">) {</span>
+<a name="l115"><span class="ln">115  </span></a>                    <span class="s1">Toast.makeText(OrderCreateActivity.</span><span class="s0">this</span><span class="s1">, </span><span class="s3">&quot;创建成功，工单#&quot; </span><span class="s1">+ response.body().getData(), Toast.LENGTH_LONG).show();</span>
+<a name="l116"><span class="ln">116  </span></a>                    <span class="s1">finish();</span>
+<a name="l117"><span class="ln">117  </span></a>                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+<a name="l118"><span class="ln">118  </span></a>                    <span class="s1">String msg = response.body()!=</span><span class="s0">null </span><span class="s1">? response.body().getMessage() : </span><span class="s3">&quot;创建失败&quot;</span><span class="s1">;</span>
+<a name="l119"><span class="ln">119  </span></a>                    <span class="s1">Toast.makeText(OrderCreateActivity.</span><span class="s0">this</span><span class="s1">, msg, Toast.LENGTH_LONG).show();</span>
+<a name="l120"><span class="ln">120  </span></a>                <span class="s1">}</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s1">}</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s1">@Override</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s0">public void </span><span class="s1">onFailure(Call&lt;ApiResponse&lt;Integer&gt;&gt; call, Throwable t) {</span>
+<a name="l124"><span class="ln">124  </span></a>                <span class="s1">btnSubmit.setEnabled(</span><span class="s0">true</span><span class="s1">);</span>
+<a name="l125"><span class="ln">125  </span></a>                <span class="s1">btnSubmit.setText(</span><span class="s3">&quot;提交&quot;</span><span class="s1">);</span>
+<a name="l126"><span class="ln">126  </span></a>                <span class="s1">Toast.makeText(OrderCreateActivity.</span><span class="s0">this</span><span class="s1">, </span><span class="s3">&quot;网络错误: &quot; </span><span class="s1">+ t.getMessage(), Toast.LENGTH_LONG).show();</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s1">}</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s1">});</span>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s1">}</span>
+<a name="l130"><span class="ln">130  </span></a><span class="s1">}</span></pre>
+</body>
+</html>

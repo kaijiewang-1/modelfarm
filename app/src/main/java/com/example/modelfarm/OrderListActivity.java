@@ -14,9 +14,9 @@ import com.example.modelfarm.network.AuthManager;
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.AcceptOrderRequest;
 import com.example.modelfarm.network.models.ApiResponse;
-import com.example.modelfarm.network.models.CheckInOrderRequest;
 import com.example.modelfarm.network.models.DispatchOrderRequest;
 import com.example.modelfarm.network.models.Order;
+import com.example.modelfarm.network.models.OrderWithMedias;
 import com.example.modelfarm.network.services.AdminApiService;
 import com.example.modelfarm.network.services.OrderApiService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -201,12 +201,16 @@ public class OrderListActivity extends AppCompatActivity {
         OrderApiService api = RetrofitClient.create(this, OrderApiService.class);
 
         // 加载全部工单
-        api.getAllOrders().enqueue(new Callback<ApiResponse<List<Order>>>() {
+        api.getAllOrders().enqueue(new Callback<ApiResponse<List<OrderWithMedias>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<Order>>> call, Response<ApiResponse<List<Order>>> response) {
+            public void onResponse(Call<ApiResponse<List<OrderWithMedias>>> call, Response<ApiResponse<List<OrderWithMedias>>> response) {
                 if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
                     allOrderList.clear();
-                    allOrderList.addAll(response.body().getData());
+                    for (OrderWithMedias item : response.body().getData()) {
+                        if (item != null && item.getOrder() != null) {
+                            allOrderList.add(item.getOrder());
+                        }
+                    }
 
                     // 如果当前是"全部"标签，更新列表
                     if (currentTab == 0) {
@@ -219,19 +223,23 @@ public class OrderListActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<Order>>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<OrderWithMedias>>> call, Throwable t) {
                 updateEmptyState();
             }
         });
 
         // 加载我的工单（如果用户已登录）
         if (currentUserId > 0) {
-            api.getOrdersByUserId(currentUserId).enqueue(new Callback<ApiResponse<List<Order>>>() {
+            api.getOrdersByUserId(currentUserId).enqueue(new Callback<ApiResponse<List<OrderWithMedias>>>() {
                 @Override
-                public void onResponse(Call<ApiResponse<List<Order>>> call, Response<ApiResponse<List<Order>>> response) {
+                public void onResponse(Call<ApiResponse<List<OrderWithMedias>>> call, Response<ApiResponse<List<OrderWithMedias>>> response) {
                     if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
                         myOrderList.clear();
-                        myOrderList.addAll(response.body().getData());
+                        for (OrderWithMedias item : response.body().getData()) {
+                            if (item != null && item.getOrder() != null) {
+                                myOrderList.add(item.getOrder());
+                            }
+                        }
 
                         // 如果当前是"我的"标签，更新列表
                         if (currentTab == 1) {
@@ -244,7 +252,7 @@ public class OrderListActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<ApiResponse<List<Order>>> call, Throwable t) {
+                public void onFailure(Call<ApiResponse<List<OrderWithMedias>>> call, Throwable t) {
                     updateEmptyState();
                 }
             });
@@ -393,25 +401,7 @@ public class OrderListActivity extends AppCompatActivity {
     }
 
     private void handleCheckInOrder(Order order) {
-        OrderApiService api = RetrofitClient.create(this, OrderApiService.class);
-        CheckInOrderRequest request = new CheckInOrderRequest(order.getId());
-        api.checkInOrder(request).enqueue(new Callback<ApiResponse<Void>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
-                if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200) {
-                    android.widget.Toast.makeText(OrderListActivity.this, "工单打卡成功", android.widget.Toast.LENGTH_SHORT).show();
-                    loadOrders();
-                } else {
-                    String msg = response.body()!=null? response.body().getMessage(): "打卡失败";
-                    android.widget.Toast.makeText(OrderListActivity.this, msg, android.widget.Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
-                android.widget.Toast.makeText(OrderListActivity.this, "网络错误:"+t.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-            }
-        });
+        android.widget.Toast.makeText(this, "当前后端未提供工单打卡接口", android.widget.Toast.LENGTH_SHORT).show();
     }
 
     private void updateEmptyState() {

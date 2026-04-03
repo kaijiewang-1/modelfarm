@@ -18,7 +18,9 @@ data class Device(
     val properties: Map<String, Any>?,
     val createdAt: String,
     val updatedAt: String,
-    val deletedAt: String?
+    val deletedAt: String?,
+    /** 设备分页列表接口可能返回 */
+    val siteName: String? = null
 ) {
     /**
      * 获取设备状态文本

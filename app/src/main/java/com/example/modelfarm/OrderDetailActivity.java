@@ -16,26 +16,28 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import com.bumptech.glide.Glide;
 import com.example.modelfarm.network.AuthManager;
+import com.example.modelfarm.network.OssUploadHelper;
+import com.example.modelfarm.network.OrderMediaUtil;
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.Order;
 import com.example.modelfarm.network.models.OrderStatus;
+import com.example.modelfarm.network.models.OrderWithMedias;
 import com.example.modelfarm.network.models.UpdateOrderRequest;
 import com.example.modelfarm.network.services.OrderApiService;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -76,6 +78,9 @@ public class OrderDetailActivity extends AppCompatActivity {
     private List<Uri> inspectionImageUris = new ArrayList<>();
     private List<String> solutionImageUrls = new ArrayList<>();
     private List<String> inspectionImageUrls = new ArrayList<>();
+    /** 已有关联媒体的 objectKey，用于 PUT /order */
+    private List<String> solutionObjectKeys = new ArrayList<>();
+    private List<String> situationObjectKeys = new ArrayList<>();
     private int currentImageType = 0; // 0: solution, 1: inspection
 
     private int orderId;
@@ -261,12 +266,13 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     private void loadOrderDetail() {
         OrderApiService api = RetrofitClient.create(this, OrderApiService.class);
-        api.getOrder(orderId).enqueue(new Callback<ApiResponse<Order>>() {
+        api.getOrder(orderId).enqueue(new Callback<ApiResponse<OrderWithMedias>>() {
             @Override
-            public void onResponse(Call<ApiResponse<Order>> call, Response<ApiResponse<Order>> response) {
+            public void onResponse(Call<ApiResponse<OrderWithMedias>> call, Response<ApiResponse<OrderWithMedias>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200 && response.body().getData() != null) {
-                    currentOrder = response.body().getData();
-                    displayOrderDetail(currentOrder);
+                    OrderWithMedias data = response.body().getData();
+                    currentOrder = data.getOrder();
+                    displayOrderDetail(currentOrder, data.getMediaUrls());
                 } else {
                     String msg = response.body() != null ? response.body().getMessage() : "获取工单详情失败";
                     Toast.makeText(OrderDetailActivity.this, msg, Toast.LENGTH_LONG).show();
@@ -275,14 +281,23 @@ public class OrderDetailActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Order>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<OrderWithMedias>> call, Throwable t) {
                 Toast.makeText(OrderDetailActivity.this, "网络错误: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 finish();
             }
         });
     }
 
-    private void displayOrderDetail(Order order) {
+    private void displayOrderDetail(Order order, Map<String, List<String>> mediaUrls) {
+        llSolutionImages.removeAllViews();
+        llInspectionImages.removeAllViews();
+        solutionImageUrls.clear();
+        inspectionImageUrls.clear();
+        solutionObjectKeys.clear();
+        situationObjectKeys.clear();
+        solutionImageUris.clear();
+        inspectionImageUris.clear();
+
         tvOrderId.setText("工单编号: #" + order.getId());
         tvTitle.setText(order.getTitle());
         tvDescription.setText(order.getDescription());
@@ -311,38 +326,47 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         tvUpdatedAt.setText("更新时间: " + order.getUpdatedAt());
 
-        // 显示解决方案
-        if (order.getSolution() != null && !order.getSolution().isEmpty()) {
-            etSolution.setText(order.getSolution());
+        if (order.getSolutionDescription() != null && !order.getSolutionDescription().isEmpty()) {
+            etSolution.setText(order.getSolutionDescription());
         }
-        
-        // 显示解决图片
-        if (order.getSolutionImages() != null && !order.getSolutionImages().isEmpty()) {
-            loadImageUrls(order.getSolutionImages(), solutionImageUrls);
-            displayImages(solutionImageUrls, llSolutionImages, true);
+
+        if (mediaUrls != null && mediaUrls.get("solution") != null) {
+            for (String u : mediaUrls.get("solution")) {
+                if (u == null || u.isEmpty()) continue;
+                solutionImageUrls.add(u);
+                String key = OrderMediaUtil.objectKeyFromUrl(u);
+                if (key != null) {
+                    solutionObjectKeys.add(key);
+                }
+            }
+            displayImages(solutionImageUrls, llSolutionImages);
         }
-        
-        // 显示异常情况和巡查图片（仅普通工单和紧急工单）
+
         int status = order.getStatus();
         boolean showInspection = (status == OrderStatus.PENDING || status == OrderStatus.URGENT);
-        
+
         if (showInspection) {
             cardInspection.setVisibility(View.VISIBLE);
-            
-            if (order.getInspectionIssue() != null && !order.getInspectionIssue().isEmpty()) {
-                etInspectionIssue.setText(order.getInspectionIssue());
+
+            if (order.getSituationDescription() != null && !order.getSituationDescription().isEmpty()) {
+                etInspectionIssue.setText(order.getSituationDescription());
             }
-            
-            if (order.getInspectionImages() != null && !order.getInspectionImages().isEmpty()) {
-                loadImageUrls(order.getInspectionImages(), inspectionImageUrls);
-                displayImages(inspectionImageUrls, llInspectionImages, false);
+
+            if (mediaUrls != null && mediaUrls.get("situation") != null) {
+                for (String u : mediaUrls.get("situation")) {
+                    if (u == null || u.isEmpty()) continue;
+                    inspectionImageUrls.add(u);
+                    String key = OrderMediaUtil.objectKeyFromUrl(u);
+                    if (key != null) {
+                        situationObjectKeys.add(key);
+                    }
+                }
+                displayImages(inspectionImageUrls, llInspectionImages);
             }
         } else {
             cardInspection.setVisibility(View.GONE);
         }
 
-        // 根据接口文档：只能标记待处理(1)或紧急处理(3)状态的工单
-        // 不能标记已完成(2)状态的工单
         boolean canComplete = (status == OrderStatus.PENDING || status == OrderStatus.URGENT);
 
         if (canComplete) {
@@ -351,43 +375,10 @@ public class OrderDetailActivity extends AppCompatActivity {
             btnComplete.setVisibility(View.GONE);
         }
     }
-    
-    /**
-     * 加载图片URL列表
-     */
-    private void loadImageUrls(String imageUrlsJson, List<String> targetList) {
-        targetList.clear();
-        if (imageUrlsJson == null || imageUrlsJson.isEmpty()) {
-            return;
-        }
-        
-        try {
-            // 尝试解析JSON数组
-            Gson gson = new Gson();
-            List<String> urls = gson.fromJson(imageUrlsJson, new TypeToken<List<String>>(){}.getType());
-            if (urls != null) {
-                targetList.addAll(urls);
-            }
-        } catch (Exception e) {
-            // 如果不是JSON，尝试按逗号分隔
-            String[] urls = imageUrlsJson.split(",");
-            for (String url : urls) {
-                String trimmed = url.trim();
-                if (!trimmed.isEmpty()) {
-                    targetList.add(trimmed);
-                }
-            }
-        }
-    }
-    
-    /**
-     * 显示已存在的图片
-     */
-    private void displayImages(List<String> imageUrls, LinearLayout container, boolean isSolution) {
+
+    private void displayImages(List<String> imageUrls, LinearLayout container) {
         container.removeAllViews();
         for (String url : imageUrls) {
-            // 这里应该使用图片加载库（如Glide）来加载网络图片
-            // 为了简化，这里只显示占位符
             ImageView imageView = new ImageView(this);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 (int) (120 * getResources().getDisplayMetrics().density),
@@ -396,8 +387,8 @@ public class OrderDetailActivity extends AppCompatActivity {
             params.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
             imageView.setLayoutParams(params);
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setImageResource(android.R.drawable.ic_menu_gallery);
             imageView.setBackgroundColor(0xFFE0E0E0);
+            Glide.with(this).load(url).centerCrop().into(imageView);
             container.addView(imageView);
         }
     }
@@ -410,33 +401,70 @@ public class OrderDetailActivity extends AppCompatActivity {
             Toast.makeText(this, "工单数据未加载", Toast.LENGTH_SHORT).show();
             return;
         }
-        
-        String solution = etSolution.getText() != null ? etSolution.getText().toString().trim() : "";
-        String inspectionIssue = etInspectionIssue.getText() != null ? etInspectionIssue.getText().toString().trim() : "";
-        
-        // 合并图片URLs（新上传的图片需要先上传到服务器获取URL，这里简化处理）
-        // 实际应该先上传图片，获取URL后再保存
-        String solutionImagesJson = buildImageUrlsJson(solutionImageUrls, solutionImageUris);
-        String inspectionImagesJson = buildImageUrlsJson(inspectionImageUrls, inspectionImageUris);
-        
+
+        final String solution = etSolution.getText() != null ? etSolution.getText().toString().trim() : "";
+        final String situation = etInspectionIssue.getText() != null ? etInspectionIssue.getText().toString().trim() : "";
+
+        final List<String> solKeys = new ArrayList<>(solutionObjectKeys);
+        final List<String> sitKeys = new ArrayList<>(situationObjectKeys);
+
+        if (!solutionImageUris.isEmpty()) {
+            OssUploadHelper.uploadUris(this, solutionImageUris, new OssUploadHelper.Callback() {
+                @Override
+                public void onSuccess(List<String> keys) {
+                    solKeys.addAll(keys);
+                    solutionImageUris.clear();
+                    runAfterSolutionUpload(solKeys, sitKeys, solution, situation);
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(OrderDetailActivity.this, message, Toast.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            runAfterSolutionUpload(solKeys, sitKeys, solution, situation);
+        }
+    }
+
+    private void runAfterSolutionUpload(List<String> solKeys, List<String> sitKeys, String solution, String situation) {
+        if (!inspectionImageUris.isEmpty()) {
+            OssUploadHelper.uploadUris(this, inspectionImageUris, new OssUploadHelper.Callback() {
+                @Override
+                public void onSuccess(List<String> keys) {
+                    sitKeys.addAll(keys);
+                    inspectionImageUris.clear();
+                    submitOrderUpdate(solKeys, sitKeys, solution, situation);
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(OrderDetailActivity.this, message, Toast.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            submitOrderUpdate(solKeys, sitKeys, solution, situation);
+        }
+    }
+
+    private void submitOrderUpdate(List<String> solKeys, List<String> sitKeys, String solution, String situation) {
         UpdateOrderRequest request = new UpdateOrderRequest(
             currentOrder.getId(),
-            null, // title
-            null, // description
-            null, // status
+            currentOrder.getTitle(),
+            currentOrder.getDescription(),
+            currentOrder.getStatus(),
             solution.isEmpty() ? null : solution,
-            solutionImagesJson.isEmpty() ? null : solutionImagesJson,
-            inspectionIssue.isEmpty() ? null : inspectionIssue,
-            inspectionImagesJson.isEmpty() ? null : inspectionImagesJson
+            solKeys.isEmpty() ? null : solKeys,
+            situation.isEmpty() ? null : situation,
+            sitKeys.isEmpty() ? null : sitKeys
         );
-        
+
         OrderApiService api = RetrofitClient.create(this, OrderApiService.class);
         api.updateOrder(request).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
                     Toast.makeText(OrderDetailActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
-                    // 重新加载工单详情
                     loadOrderDetail();
                 } else {
                     String msg = response.body() != null ? response.body().getMessage() : "保存失败";
@@ -449,27 +477,6 @@ public class OrderDetailActivity extends AppCompatActivity {
                 Toast.makeText(OrderDetailActivity.this, "网络错误: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-    }
-    
-    /**
-     * 构建图片URLs JSON字符串
-     */
-    private String buildImageUrlsJson(List<String> existingUrls, List<Uri> newUris) {
-        List<String> allUrls = new ArrayList<>(existingUrls);
-        
-        // 注意：新上传的图片需要先上传到服务器获取URL
-        // 这里简化处理，实际应该先上传图片
-        for (Uri uri : newUris) {
-            // TODO: 上传图片到服务器，获取URL后添加到allUrls
-            // 这里暂时跳过新图片
-        }
-        
-        if (allUrls.isEmpty()) {
-            return "";
-        }
-        
-        Gson gson = new Gson();
-        return gson.toJson(allUrls);
     }
 
     private String getStatusText(int status) {

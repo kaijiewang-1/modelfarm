@@ -13,7 +13,7 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.3"
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,6 +76,7 @@ dependencies {
     // Note: If you encounter SSL certificate issues, see BUILD_TROUBLESHOOTING.md
     // You may need to configure proxy settings in gradle.properties
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
