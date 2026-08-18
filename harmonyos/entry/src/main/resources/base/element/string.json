@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "数智化养殖管理平台" },
+    { "name": "EntryAbility_desc", "value": "数智化养殖管理平台入口" },
+    { "name": "EntryAbility_label", "value": "数智化养殖" }
+  ]
+}
