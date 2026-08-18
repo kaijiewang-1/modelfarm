@@ -86,4 +86,19 @@ interface FarmSiteApiService {
      */
     @GET("/farmSite/camera")
     fun getFarmSiteCameras(@Query("farmSiteId") farmSiteId: Int): Call<ApiResponse<List<Device>>>
+    
+    /**
+     * 根据年份和养殖点获取动物出入库月度统计数据
+     */
+    @GET("/inout/yearSiteData")
+    fun getYearSiteData(
+        @Query("year") year: Int,
+        @Query("siteId") siteId: Int
+    ): Call<ApiResponse<List<MonthInoutData>>>
+
+    /**
+     * 按企业维度：根据年份获取动物出入库月度统计
+     */
+    @GET("/inout/yearData")
+    fun getYearData(@Query("year") year: Int): Call<ApiResponse<List<MonthInoutData>>>
 }

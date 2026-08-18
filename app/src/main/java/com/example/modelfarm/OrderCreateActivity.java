@@ -128,5 +128,3 @@ public class  OrderCreateActivity extends AppCompatActivity {
         });
     }
 }
-
-

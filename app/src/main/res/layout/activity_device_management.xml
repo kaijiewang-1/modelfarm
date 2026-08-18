@@ -124,18 +124,8 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:text="添加设备" />
-
-        <!-- 显示服务器数据(JSON)按钮 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_show_devices_json"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="12dp"
-            android:text="显示设备JSON" />
+            android:text="添加设备" />
 
         <!-- 设备列表 -->
         <androidx.recyclerview.widget.RecyclerView

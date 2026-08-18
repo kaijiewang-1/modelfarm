@@ -27,7 +27,7 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
         this.orderList = orderList;
         this.actionListener = listener;
     }
-    
+
     /**
      * 设置管理员权限
      */
@@ -113,99 +113,57 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
         }
 
         private void setupActionButtons(Order order) {
-            // Reset all buttons visibility
             if (btnClaim != null) btnClaim.setVisibility(View.GONE);
             if (btnDispatch != null) btnDispatch.setVisibility(View.GONE);
             if (btnComplete != null) btnComplete.setVisibility(View.GONE);
             if (btnCheckIn != null) btnCheckIn.setVisibility(View.GONE);
 
-            // Show appropriate buttons based on status
-            switch (order.getStatus()) {
-                case OrderStatus.PENDING:
-                    // 待处理状态：显示认领和派发按钮
+            int status = order.getStatus();
+            boolean accepted = order.isAccepted() == 1;
+
+            if (status == OrderStatus.COMPLETED) {
+                return;
+            }
+
+            // 后端仅返回状态 1/2/3；认领态由 isAccepted 表示（无单独的 status=4）
+            if (status == OrderStatus.PENDING || status == OrderStatus.URGENT) {
+                if (!accepted) {
                     if (btnClaim != null) {
                         btnClaim.setVisibility(View.VISIBLE);
                         btnClaim.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onClaim(order);
-                            }
+                            if (actionListener != null) actionListener.onClaim(order);
                         });
                     }
                     if (btnDispatch != null) {
                         btnDispatch.setVisibility(View.VISIBLE);
                         btnDispatch.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onDispatch(order);
-                            }
+                            if (actionListener != null) actionListener.onDispatch(order);
                         });
                     }
-                    break;
-                case OrderStatus.CLAIMED:
-                    // 已认领状态：显示打卡和完成按钮
-                    if (btnCheckIn != null) {
-                        btnCheckIn.setVisibility(View.VISIBLE);
-                        btnCheckIn.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onCheckIn(order);
-                            }
-                        });
-                    }
+                } else {
                     if (btnComplete != null) {
                         btnComplete.setVisibility(View.VISIBLE);
                         btnComplete.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onComplete(order);
-                            }
+                            if (actionListener != null) actionListener.onComplete(order);
                         });
                     }
-                    // 只有管理员可以派发工单
                     if (isAdmin && btnDispatch != null) {
                         btnDispatch.setVisibility(View.VISIBLE);
                         btnDispatch.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onDispatch(order);
-                            }
+                            if (actionListener != null) actionListener.onDispatch(order);
                         });
                     }
-                    break;
-                case OrderStatus.URGENT:
-                    // 紧急状态：显示认领、派发和打卡按钮（如果已认领）
-                    if (btnClaim != null) {
-                        btnClaim.setVisibility(View.VISIBLE);
-                        btnClaim.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onClaim(order);
-                            }
-                        });
-                    }
-                    if (btnDispatch != null) {
-                        btnDispatch.setVisibility(View.VISIBLE);
-                        btnDispatch.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onDispatch(order);
-                            }
-                        });
-                    }
-                    // 如果已认领，显示打卡按钮
-                    if (order.isAccepted() == 1 && btnCheckIn != null) {
-                        btnCheckIn.setVisibility(View.VISIBLE);
-                        btnCheckIn.setOnClickListener(v -> {
-                            if (actionListener != null) {
-                                actionListener.onCheckIn(order);
-                            }
-                        });
-                    }
-                    break;
+                }
             }
         }
-        
+
         /**
          * 获取状态详细信息（发布/受理/完结）
          */
         private String getStatusDetailText(Order order) {
             StringBuilder sb = new StringBuilder();
             sb.append("发布: ").append(order.getCreatedAt());
-            
+
             // 受理信息
             if (order.getAcceptedId() != null) {
                 if (order.isAccepted() == 1) {
@@ -214,12 +172,12 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
                     sb.append("\n受理: 已派发");
                 }
             }
-            
+
             // 完结信息
             if (order.getCompletedAt() != null && !order.getCompletedAt().isEmpty()) {
                 sb.append("\n完结: ").append(order.getCompletedAt());
             }
-            
+
             return sb.toString();
         }
 
@@ -247,7 +205,7 @@ public class OrderListAdapter extends RecyclerView.Adapter<OrderListAdapter.Orde
         void onDispatch(Order order);
 
         void onComplete(Order order);
-        
+
         void onCheckIn(Order order);
     }
 }

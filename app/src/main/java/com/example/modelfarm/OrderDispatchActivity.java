@@ -52,7 +52,7 @@ public class OrderDispatchActivity extends AppCompatActivity {
         // 获取传递的工单信息
         orderId = getIntent().getIntExtra("orderId", -1);
         orderTitle = getIntent().getStringExtra("orderTitle");
-        
+
         if (orderId == -1 || orderTitle == null) {
             Toast.makeText(this, "工单信息无效", Toast.LENGTH_SHORT).show();
             finish();
@@ -126,7 +126,7 @@ public class OrderDispatchActivity extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, userNames);
         spUsers.setAdapter(adapter);
-        
+
         spUsers.setOnItemClickListener((parent, view, position, id) -> {
             selectedUserId = userList.get(position).getId();
         });
@@ -135,16 +135,16 @@ public class OrderDispatchActivity extends AppCompatActivity {
     private void dispatchOrder() {
         OrderApiService api = RetrofitClient.create(this, OrderApiService.class);
         DispatchOrderRequest request = new DispatchOrderRequest(orderId, selectedUserId);
-        
+
         btnDispatch.setEnabled(false);
         btnDispatch.setText("派发中...");
-        
+
         api.dispatchOrder(request).enqueue(new Callback<ApiResponse<Void>>() {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 btnDispatch.setEnabled(true);
                 btnDispatch.setText("派发");
-                
+
                 if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
                     Toast.makeText(OrderDispatchActivity.this, "工单派发成功", Toast.LENGTH_SHORT).show();
                     finish();

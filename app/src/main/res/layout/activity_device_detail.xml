@@ -429,9 +429,9 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 原始 JSON 卡片 -->
+            <!-- 最新数据卡片 -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardRawJson"
+                android:id="@+id/cardLatestData"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -445,60 +445,82 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="最新数据"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#1B5E20"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- 数据项容器 -->
                     <LinearLayout
+                        android:id="@+id/llLatestDataContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="原始 JSON"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#1B5E20" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnCopyJson"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="复制"
-                            android:textSize="14sp" />
+                        <!-- 数据项将通过代码动态添加 -->
 
                     </LinearLayout>
 
-                    <com.google.android.material.card.MaterialCardView
+                    <TextView
+                        android:id="@+id/tvLatestDataTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardCornerRadius="8dp"
-                        app:cardBackgroundColor="#F5F5F5"
-                        app:strokeColor="#E0E0E0"
-                        app:strokeWidth="1dp">
+                        android:text="更新时间：-"
+                        android:textSize="12sp"
+                        android:textColor="#999999"
+                        android:gravity="end"
+                        android:layout_marginTop="12dp" />
 
-                        <ScrollView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:maxHeight="300dp"
-                            android:padding="12dp">
+                </LinearLayout>
 
-                            <TextView
-                                android:id="@+id/tvRawJson"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="{}"
-                                android:textIsSelectable="true"
-                                android:fontFamily="monospace"
-                                android:textSize="12sp"
-                                android:textColor="#444444"
-                                android:lineSpacingExtra="4dp" />
+            </com.google.android.material.card.MaterialCardView>
 
-                        </ScrollView>
+            <!-- 历史数据卡片 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardHistoryData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@android:color/white">
 
-                    </com.google.android.material.card.MaterialCardView>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="历史数据"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#1B5E20"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- 历史数据列表 -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvHistoryData"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+
+                    <TextView
+                        android:id="@+id/tvNoHistoryData"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="暂无历史数据"
+                        android:textSize="14sp"
+                        android:textColor="#999999"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:visibility="gone" />
 
                 </LinearLayout>
 

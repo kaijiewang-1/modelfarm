@@ -1,0 +1,10 @@
+{
+  "color": [
+    { "name": "start_window_background", "value": "#F4F7F2" },
+    { "name": "brand_green", "value": "#176B43" },
+    { "name": "accent_lime", "value": "#B9E769" },
+    { "name": "surface", "value": "#FFFFFF" },
+    { "name": "text_primary", "value": "#17211B" },
+    { "name": "text_secondary", "value": "#68736C" }
+  ]
+}

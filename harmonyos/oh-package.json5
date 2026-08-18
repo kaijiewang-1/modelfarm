@@ -1,0 +1,8 @@
+{
+  "modelVersion": "6.1.1",
+  "description": "HarmonyOS port of the ModelFarm smart farming application",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hvigor-ohos-plugin": "5.0.8"
+  }
+}
