@@ -13,7 +13,7 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,7 +64,8 @@ dependencies {
     implementation("com.google.android.exoplayer:exoplayer:2.18.7")
     implementation("com.google.android.exoplayer:exoplayer-ui:2.18.7")
     implementation("com.google.android.exoplayer:extension-rtmp:2.18.7")
-    
+   // implementation("com.google.android.exoplayer:extension-ffmpeg:2.18.7")
+    implementation("com.github.microshow:RxFFmpeg:4.9.0-lite")
     // Network dependencies
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
@@ -72,6 +73,11 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
     implementation(libs.androidx.media3.exoplayer)
+    // MPAndroidChart - using JitPack
+    // Note: If you encounter SSL certificate issues, see BUILD_TROUBLESHOOTING.md
+    // You may need to configure proxy settings in gradle.properties
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

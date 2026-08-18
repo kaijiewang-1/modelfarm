@@ -1,0 +1,9 @@
+/.hvigor/
+/oh_modules/
+/.idea/
+/**/build/
+local.properties
+*.p12
+*.cer
+*.pem
+*.key

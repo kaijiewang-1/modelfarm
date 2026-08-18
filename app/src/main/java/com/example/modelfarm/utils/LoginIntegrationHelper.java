@@ -46,7 +46,7 @@ public class LoginIntegrationHelper {
             public void onSuccess(LoginResponse loginResponse) {
                 // 保存登录信息
                 authManager.saveLoginInfo(loginResponse);
-                callback.onSuccess("登录成功，欢迎使用智慧养殖系统");
+                callback.onSuccess("登录成功，欢迎使用数智化养殖软件平台");
             }
             
             @Override

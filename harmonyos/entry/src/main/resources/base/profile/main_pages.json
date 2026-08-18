@@ -1,0 +1,17 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/LoginPage",
+    "pages/RegisterPage",
+    "pages/CompanySetupPage",
+    "pages/HomePage",
+    "pages/FarmPage",
+    "pages/DevicePage",
+    "pages/LivePage",
+    "pages/OrderPage",
+    "pages/EnvironmentPage",
+    "pages/CompanyPage",
+    "pages/ProfilePage",
+    "pages/AdminPage"
+  ]
+}
