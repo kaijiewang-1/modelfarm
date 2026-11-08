@@ -1,4 +1,4 @@
-import { promptAction } from '@kit.ArkUI'
+import { router } from '@kit.ArkUI'
 import { PageHeader, StatePanel } from '../components/CommonComponents'
 import { Farm } from '../models/Models'
 import { FarmService } from '../services/FarmService'
@@ -96,7 +96,7 @@ struct FarmPage {
               .padding(15)
               .backgroundColor(Color.White)
               .borderRadius(7)
-              .onClick(() => promptAction.showToast({ message: `${farm.name}：养殖点详情可继续对接 /farm/sites` }))
+              .onClick(() => router.pushUrl({ url: 'pages/FarmDetailPage', params: { farmId: farm.id, farmName: farm.name } }))
             }
           }, (farm: Farm) => String(farm.id))
         }

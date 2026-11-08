@@ -22,6 +22,7 @@ import com.example.modelfarm.network.models.FarmSite;
 import com.example.modelfarm.network.models.PageResponse;
 import com.example.modelfarm.network.services.DeviceApiService;
 import com.example.modelfarm.network.services.FarmApiService;
+import com.example.modelfarm.utils.StreamUrlResolver;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -39,6 +40,9 @@ import retrofit2.Response;
 
 public class DeviceManagementActivity extends AppCompatActivity {
 
+    public static final String EXTRA_OPEN_CREATE_DIALOG = "open_create_device_dialog";
+    public static final String EXTRA_PRESELECT_SITE_ID = "preselect_site_id";
+
     private MaterialToolbar toolbar;
     private TextView tvTotalDevices;
     private TextView tvOnlineDevices;
@@ -54,6 +58,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
     
     // 站点列表（用于创建设备时选择）
     private List<FarmSite> farmSiteList = new ArrayList<>();
+    private int requestedSiteId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +73,10 @@ public class DeviceManagementActivity extends AppCompatActivity {
         setupClickListeners();
         initBottomNavigation();
         loadDeviceData();
+        requestedSiteId = getIntent().getIntExtra(EXTRA_PRESELECT_SITE_ID, -1);
+        if (savedInstanceState == null && getIntent().getBooleanExtra(EXTRA_OPEN_CREATE_DIALOG, false)) {
+            showCreateDeviceDialog();
+        }
     }
 
     /**
@@ -160,19 +169,16 @@ public class DeviceManagementActivity extends AppCompatActivity {
     }
 
     private void openLiveStream(Device device) {
-        String pushName = device.getPushName();
-        if (TextUtils.isEmpty(pushName)) {
-            Toast.makeText(this, "该摄像头缺少推流名称，无法打开直播", Toast.LENGTH_LONG).show();
+        String streamUrl = StreamUrlResolver.resolve(device.getPushName());
+        if (streamUrl == null) {
+            Toast.makeText(this, "该摄像头未配置完整的 RTMP 推流地址", Toast.LENGTH_LONG).show();
             return;
         }
 
         Intent intent = new Intent(this, LiveStreamActivity.class);
         intent.putExtra("device_id", device.getId());
         intent.putExtra("device_name", device.getName());
-        intent.putExtra("push_name", pushName);
-        if (!TextUtils.isEmpty(device.getUrl())) {
-            intent.putExtra("stream_url", device.getUrl());
-        }
+        intent.putExtra("push_name", streamUrl);
         startActivity(intent);
     }
 
@@ -269,6 +275,12 @@ public class DeviceManagementActivity extends AppCompatActivity {
                 );
                 siteAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinnerSite.setAdapter(siteAdapter);
+                for (int index = 0; index < farmSiteList.size(); index++) {
+                    if (farmSiteList.get(index).getId() == requestedSiteId) {
+                        spinnerSite.setSelection(index);
+                        break;
+                    }
+                }
 
                 // 设置设备类型下拉框
                 String[] deviceTypes = {"摄像头", "传感器", "控制器"};
@@ -315,8 +327,9 @@ public class DeviceManagementActivity extends AppCompatActivity {
                                 Toast.makeText(DeviceManagementActivity.this, "请输入MAC地址", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-                            if (type == 1 && pushName.isEmpty()) {
-                                Toast.makeText(DeviceManagementActivity.this, "摄像头设备必须填写推流名称", Toast.LENGTH_SHORT).show();
+                            String validatedStreamUrl = type == 1 ? StreamUrlResolver.resolve(pushName) : null;
+                            if (type == 1 && validatedStreamUrl == null) {
+                                Toast.makeText(DeviceManagementActivity.this, "请输入完整的 RTMP 推流地址", Toast.LENGTH_SHORT).show();
                                 return;
                             }
 
@@ -326,7 +339,7 @@ public class DeviceManagementActivity extends AppCompatActivity {
                                 selectedSite.getId(),
                                 mac,
                                 type,
-                                type == 1 ? pushName : null
+                                validatedStreamUrl
                             );
 
                             createDevice(request);

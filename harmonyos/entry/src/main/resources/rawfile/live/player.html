@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' resource: file: 'unsafe-inline'; style-src 'unsafe-inline'; media-src blob: http: https:; connect-src http: https: ws: wss:; worker-src blob:; img-src 'none'; object-src 'none'; base-uri 'none'">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101c15;color:#eef6f0;font:14px system-ui}main{position:relative}video{display:block;width:100%;height:240px;object-fit:contain;background:#000}#status{padding:12px;min-height:44px;color:#c3d8c9}button{margin:0 12px 12px;padding:8px 16px;background:#dff1e7;color:#176b43;border:0;border-radius:5px}canvas{position:absolute;top:0;left:0;pointer-events:none;width:100%;height:240px}
+</style>
+<script src="flv.min.js"></script>
+</head>
+<body><main><video id="video" controls playsinline muted></video><canvas id="overlay"></canvas></main><div id="status" role="status">请选择摄像头</div><button id="retry" type="button">重试播放</button>
+<script>
+'use strict';
+(function () {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('overlay');
+  const status = document.getElementById('status');
+  const context = canvas.getContext('2d');
+  let player = null, socket = null, timeout = null, configuration = null, generation = 0;
+  function message(text) { status.textContent = text; }
+  function clearOverlay() { context.clearRect(0, 0, canvas.width, canvas.height); }
+  window.stopPlayback = function () {
+    generation++;
+    clearTimeout(timeout);
+    if (socket) { socket.onclose = null; socket.close(); socket = null; }
+    if (player) { try { player.destroy(); } catch (_) {} player = null; }
+    video.pause(); video.removeAttribute('src'); video.load(); clearOverlay();
+  };
+  window.startPlayback = function (config) {
+    window.stopPlayback();
+    configuration = config;
+    const version = generation;
+    let url;
+    try { url = new URL(config.url); } catch (_) { message('未配置有效的播放地址'); return; }
+    if (!/^https?:$/.test(url.protocol) || url.username || url.password) { message('播放地址不受支持'); return; }
+    message('正在连接摄像头…');
+    if (/\.flv(?:$|[?#])/i.test(config.url)) {
+      if (!window.flvjs || !flvjs.isSupported()) {
+        message('当前系统 Web 内核不支持此视频格式，请升级系统或配置 HLS 视频源'); return;
+      }
+      player = flvjs.createPlayer({type:'flv',url:config.url,isLive:true,hasAudio:false}, {
+        enableWorker:false,enableStashBuffer:false,lazyLoad:false,autoCleanupSourceBuffer:true,
+        autoCleanupMaxBackwardDuration:10,autoCleanupMinBackwardDuration:5
+      });
+      player.on(flvjs.Events.ERROR, function () {
+        if (version === generation) { clearTimeout(timeout); message('视频连接失败，请检查摄像头、网络及流媒体服务后重试'); }
+      });
+      player.attachMediaElement(video); player.load();
+    } else { video.src = config.url; }
+    timeout = setTimeout(function () {
+      if (version === generation) { message('连接超时，请检查摄像头是否在线后重试'); }
+    }, 15000);
+    video.play().catch(function () { if (version === generation) { message('点击画面中的播放按钮开始观看'); } });
+    if (config.wsUrl && config.ticket) {
+      try {
+        const wsUrl = new URL(config.wsUrl);
+        if (!/^wss?:$/.test(wsUrl.protocol) || wsUrl.username || wsUrl.password) { return; }
+        wsUrl.searchParams.set('stream_id', config.streamId);
+        wsUrl.searchParams.set('ticket', config.ticket);
+        if (config.algoEpoch !== undefined) { wsUrl.searchParams.set('detection_epoch', String(config.algoEpoch)); }
+        socket = new WebSocket(wsUrl.toString());
+        socket.onmessage = function (event) {
+          if (version !== generation || typeof event.data !== 'string' || event.data.length > 262144) { return; }
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type !== 'frame_meta' || !Array.isArray(data.boxes)) { return; }
+            const width = Number(data.width || data.frame_width), height = Number(data.height || data.frame_height);
+            if (!(width > 0 && height > 0)) { return; }
+            const displayWidth = video.clientWidth, displayHeight = video.clientHeight;
+            canvas.width = displayWidth; canvas.height = displayHeight; clearOverlay();
+            const scale = Math.min(displayWidth / width, displayHeight / height);
+            const left = (displayWidth - width * scale) / 2, top = (displayHeight - height * scale) / 2;
+            context.strokeStyle = '#b9e769'; context.fillStyle = '#b9e769'; context.lineWidth = 2; context.font = '12px sans-serif';
+            for (const box of data.boxes.slice(0, 100)) {
+              const rect = Array.isArray(box.bbox) ? box.bbox : [box.x1, box.y1, box.x2, box.y2];
+              if (rect.length !== 4 || !rect.every(Number.isFinite)) { continue; }
+              const x = left + rect[0] * scale, y = top + rect[1] * scale;
+              context.strokeRect(x, y, (rect[2]-rect[0])*scale, (rect[3]-rect[1])*scale);
+              context.fillText(String(box.label || box.class_name || '').slice(0, 60), x, Math.max(12, y - 4));
+            }
+          } catch (_) { /* Ignore malformed metadata without interrupting video. */ }
+        };
+        socket.onerror = function () { if (version === generation) { message('视频可继续观看，识别结果暂不可用'); } };
+      } catch (_) { message('视频可继续观看，识别结果暂不可用'); }
+    }
+  };
+  video.addEventListener('playing', function () { clearTimeout(timeout); message('正在直播'); });
+  video.addEventListener('waiting', function () { message('正在缓冲…'); });
+  video.addEventListener('error', function () { clearTimeout(timeout); message('视频无法播放，请检查视频源后重试'); });
+  video.addEventListener('ended', function () { message('直播已结束'); });
+  document.getElementById('retry').onclick = function () { if (configuration) { window.startPlayback(configuration); } };
+  document.addEventListener('visibilitychange', function () { if (document.hidden) { window.stopPlayback(); } });
+  window.addEventListener('pagehide', window.stopPlayback);
+})();
+</script></body></html>

@@ -32,6 +32,7 @@ struct RegisterPage {
   }
 
   private async submit(): Promise<void> {
+    if (this.loading) { return }
     if (!this.validate()) {
       return
     }
@@ -44,6 +45,9 @@ struct RegisterPage {
         password: this.password
       })
       await AuthStore.getInstance().saveSession(response)
+      this.password = ''
+      this.confirmPassword = ''
+      router.clear()
       promptAction.showToast({ message: '注册成功' })
       const target: string = response.enterpriseId > 0 ? 'pages/HomePage' : 'pages/CompanySetupPage'
       router.replaceUrl({ url: target })

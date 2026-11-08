@@ -93,7 +93,7 @@ export interface Device {
   siteName?: string
   mac: string
   type: number
-  status: number
+  status: number | string
   url?: string
   createdAt: string
   updatedAt: string
@@ -184,6 +184,7 @@ export interface LiveTicket {
   expiresAt: string
   algoFlvUrl?: string
   frameMetadataEnabled?: boolean
+  algoEpoch?: number
 }
 
 export interface QueryParams {
@@ -193,9 +194,37 @@ export interface QueryParams {
   deviceId?: number
   farmId?: number
   farmSiteId?: number
+  siteId?: number
 }
 
-export type RequestBody = LoginRequest | RegisterRequest | CreateEnterpriseRequest | JoinEnterpriseRequest | LiveTicketRequest
+export interface CreateDeviceRequest {
+  name: string
+  siteId: number
+  mac: string
+  type: number
+  pushName?: string
+}
+
+export interface CreateOrderRequest {
+  title: string
+  description: string
+  status: number
+}
+
+export interface AcceptOrderRequest {
+  orderId: number
+}
+
+export interface PageParams {
+  farmId?: number
+  farmName?: string
+  siteId?: number
+  siteName?: string
+  deviceId?: number
+  orderId?: number
+}
+
+export type RequestBody = LoginRequest | RegisterRequest | CreateEnterpriseRequest | JoinEnterpriseRequest | LiveTicketRequest | CreateDeviceRequest | CreateOrderRequest | AcceptOrderRequest
 
 export function deviceTypeText(type: number): string {
   if (type === 1) {

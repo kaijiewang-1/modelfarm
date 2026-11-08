@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit'
+import { router } from '@kit.ArkUI'
 import { ApiEnvelope, QueryParams, RequestBody } from '../models/Models'
 import { ApiConfig } from './ApiConfig'
 import { AuthStore } from './AuthStore'
@@ -56,6 +57,9 @@ export class ApiClient {
     if (query.farmSiteId !== undefined) {
       segments.push('farmSiteId=' + encodeURIComponent(String(query.farmSiteId)))
     }
+    if (query.siteId !== undefined) {
+      segments.push('siteId=' + encodeURIComponent(String(query.siteId)))
+    }
     return segments.join('&')
   }
   private async request<T>(path: string, method: http.RequestMethod, body?: RequestBody): Promise<T> {
@@ -79,7 +83,7 @@ export class ApiClient {
         expectDataType: http.HttpDataType.STRING
       })
       if (response.responseCode === 401) {
-        await AuthStore.getInstance().clearSession()
+        await this.expireSession(token)
         throw new ApiError('登录状态已失效，请重新登录', 401)
       }
       if (response.responseCode < 200 || response.responseCode >= 300) {
@@ -87,10 +91,14 @@ export class ApiClient {
       }
       const raw: string = String(response.result)
       const envelope: ApiEnvelope<T> = JSON.parse(raw) as ApiEnvelope<T>
-      if (typeof envelope.code !== 'number' || typeof envelope.message !== 'string') {
+      if (!envelope || typeof envelope.code !== 'number') {
         throw new ApiError('服务器返回的数据格式不正确', response.responseCode)
       }
       if (envelope.code !== 200) {
+        if (envelope.code === 401 || envelope.code === 11011 || envelope.code === 11012) {
+          await this.expireSession(token)
+          throw new ApiError('登录状态已失效，请重新登录', 401, envelope.code)
+        }
         throw new ApiError(envelope.message || '业务请求失败', response.responseCode, envelope.code)
       }
       if (envelope.data === undefined || envelope.data === null) {
@@ -104,6 +112,20 @@ export class ApiClient {
       throw new ApiError('网络连接失败，请检查网络后重试')
     } finally {
       request.destroy()
+    }
+  }
+
+  private async expireSession(requestToken: string): Promise<void> {
+    const auth: AuthStore = AuthStore.getInstance()
+    // Ignore a delayed response from a session which has already been replaced.
+    if (requestToken.length === 0 || auth.token !== requestToken) {
+      return
+    }
+    try {
+      await auth.clearSession()
+    } finally {
+      router.clear()
+      router.replaceUrl({ url: 'pages/LoginPage' }).catch(() => {})
     }
   }
 }

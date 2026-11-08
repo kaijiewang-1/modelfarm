@@ -1,6 +1,6 @@
 import { promptAction, router } from '@kit.ArkUI'
 import { Device, EnterpriseStats } from '../models/Models'
-import { emptyEnvironment, EnvironmentReading, parseEnvironment } from '../services/EnvironmentParser'
+import { emptyEnvironment, EnvironmentReading, parseEnvironment, hasEnvironmentReadings } from '../services/EnvironmentParser'
 import { FarmService } from '../services/FarmService'
 
 interface ModuleItem {
@@ -25,6 +25,7 @@ struct HomePage {
   }
   @State environment: EnvironmentReading = emptyEnvironment()
   @State refreshedAt: string = '--:--'
+  @State errorText: string = ''
   private service: FarmService = FarmService.getInstance()
   private refreshTimer: number = -1
   private modules: ModuleItem[] = [
@@ -37,25 +38,30 @@ struct HomePage {
     { mark: '权', title: '管理员', caption: '用户权限管理', url: 'pages/AdminPage', color: '#F5E5E3' }
   ]
 
-  aboutToAppear(): void {
+  onPageShow(): void {
     this.refresh()
+    if (this.refreshTimer >= 0) { clearInterval(this.refreshTimer) }
     this.refreshTimer = setInterval(() => this.refresh(), 30000)
   }
 
-  aboutToDisappear(): void {
+  onPageHide(): void {
     if (this.refreshTimer >= 0) {
       clearInterval(this.refreshTimer)
+      this.refreshTimer = -1
     }
   }
 
   private async refresh(): Promise<void> {
+    if (this.loading && this.refreshTimer >= 0) { return }
     this.loading = true
+    this.errorText = ''
     try {
       this.stats = await this.service.getStats()
       await this.loadEnvironment()
       const now: Date = new Date()
       this.refreshedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
     } catch (error) {
+      this.errorText = error instanceof Error ? error.message : '数据刷新失败'
       promptAction.showToast({ message: error instanceof Error ? error.message : '数据刷新失败' })
     } finally {
       this.loading = false
@@ -69,7 +75,7 @@ struct HomePage {
       const sensor: Device = sensors.records[index]
       try {
         const latest = await this.service.getLatestDeviceData(sensor.id)
-        if (Object.keys(latest.data).length > 0) {
+        if (hasEnvironmentReadings(latest)) {
           this.environment = parseEnvironment(latest)
           return
         }
@@ -158,7 +164,7 @@ struct HomePage {
               }
               .alignItems(HorizontalAlign.Start)
               .layoutWeight(1)
-              Text(this.loading ? '同步中' : '运行正常')
+              Text(this.loading ? '同步中' : this.errorText.length > 0 ? '同步失败' : '已同步')
                 .fontSize(11)
                 .fontColor('#173B28')
                 .backgroundColor('#B9E769')

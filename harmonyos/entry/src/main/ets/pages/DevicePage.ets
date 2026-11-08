@@ -1,3 +1,4 @@
+import { router } from '@kit.ArkUI'
 import { PageHeader, StatePanel, StatusTag } from '../components/CommonComponents'
 import { Device, deviceStatusCode, deviceStatusText, deviceTypeText } from '../models/Models'
 import { FarmService } from '../services/FarmService'
@@ -11,7 +12,7 @@ struct DevicePage {
   @State errorText: string = ''
   private service: FarmService = FarmService.getInstance()
 
-  aboutToAppear(): void {
+  onPageShow(): void {
     this.load()
   }
 
@@ -45,6 +46,12 @@ struct DevicePage {
   build() {
     Column() {
       PageHeader({ title: '设备管理', subtitle: '摄像头、传感器与控制器' })
+      Row({ space: 12 }) {
+        Button('添加设备').height(36).fontColor(Color.White).backgroundColor('#176B43')
+          .onClick(() => router.pushUrl({ url: 'pages/DeviceCreatePage' }))
+        Button('刷新').height(36).fontColor('#176B43').backgroundColor('#E0EFE6')
+          .enabled(!this.loading).onClick(() => this.load())
+      }.width('100%').padding({ left: 18, right: 18, bottom: 10 })
       Scroll() {
         Row({ space: 8 }) {
           this.filterButton('全部', 0)
@@ -109,6 +116,7 @@ struct DevicePage {
               .padding(15)
               .backgroundColor(Color.White)
               .borderRadius(7)
+              .onClick(() => router.pushUrl({ url: 'pages/DeviceDetailPage', params: { deviceId: device.id } }))
             }
           }, (device: Device) => String(device.id))
         }

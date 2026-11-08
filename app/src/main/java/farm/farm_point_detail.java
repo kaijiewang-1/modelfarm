@@ -28,6 +28,7 @@ import retrofit2.Response;
 
 import com.example.modelfarm.network.models.Device;
 import com.example.modelfarm.DeviceAdapter;
+import com.example.modelfarm.DeviceManagementActivity;
 import com.example.modelfarm.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -69,7 +70,7 @@ public class farm_point_detail extends AppCompatActivity {
     private TextView tvTotalDevices;
     private TextView tvOnlineDevices;
     private TextView tvOfflineDevices;
-    // private MaterialButton btnAddDevice; // 暂时注释掉未使用的变量
+    private MaterialButton btnAddDevice;
     private RecyclerView rvDevices;
     private DeviceAdapter deviceAdapter;
     private FarmSite data;
@@ -113,9 +114,10 @@ public class farm_point_detail extends AppCompatActivity {
         tvTotalDevices = findViewById(R.id.tv_total_devices);
         tvOnlineDevices = findViewById(R.id.tv_online_devices);
         tvOfflineDevices = findViewById(R.id.tv_offline_devices);
-        // btnAddDevice = findViewById(R.id.btn_add_device); // 已注释掉
+        btnAddDevice = findViewById(R.id.btn_add_device);
         btnEditInfo = findViewById(R.id.tv_btn_update);
         rvDevices = findViewById(R.id.rv_devices);
+        btnAddDevice.setOnClickListener(view -> openCreateDeviceFlow());
         
         // 鸡只监测数据
         tvChickenStatus = findViewById(R.id.tv_chicken_status);
@@ -131,6 +133,18 @@ public class farm_point_detail extends AppCompatActivity {
         // 出入库统计图表
         chartInout = findViewById(R.id.chart_inout);
         spinnerYear = findViewById(R.id.spinner_year);
+    }
+
+    private void openCreateDeviceFlow() {
+        if (farmSiteId <= 0) {
+            Toast.makeText(this, "养殖点信息尚未加载，请稍后重试", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(this, DeviceManagementActivity.class);
+        intent.putExtra(DeviceManagementActivity.EXTRA_OPEN_CREATE_DIALOG, true);
+        intent.putExtra(DeviceManagementActivity.EXTRA_PRESELECT_SITE_ID, farmSiteId);
+        startActivity(intent);
     }
 
     private void showInputChickenDialog() {

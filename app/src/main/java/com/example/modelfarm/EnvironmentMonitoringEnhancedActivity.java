@@ -23,6 +23,7 @@ import com.example.modelfarm.network.models.Notification;
 import com.example.modelfarm.network.services.DeviceApiService;
 import com.example.modelfarm.network.services.DeviceDataApiService;
 import com.example.modelfarm.network.services.NotificationApiService;
+import com.example.modelfarm.utils.DeviceDataParser;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -39,10 +40,10 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
     private MaterialToolbar toolbar;
     private TextView tvTemperature;
     private TextView tvHumidity;
-    private TextView tvLight;
-    private TextView tvSoilHumidity;
     private TextView tvCo2;
-    private TextView tvWindSpeed;
+    private TextView tvNh3;
+    private TextView tvPm25;
+    private TextView tvPm10;
     private RecyclerView rvAlerts;
     private MaterialButton btnToday;
     private MaterialButton btnWeek;
@@ -69,10 +70,10 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         tvTemperature = findViewById(R.id.tv_temperature);
         tvHumidity = findViewById(R.id.tv_humidity);
-        tvLight = findViewById(R.id.tv_light);
-        tvSoilHumidity = findViewById(R.id.tv_soil_humidity);
         tvCo2 = findViewById(R.id.tv_co2);
-        tvWindSpeed = findViewById(R.id.tv_wind_speed);
+        tvNh3 = findViewById(R.id.tv_nh3);
+        tvPm25 = findViewById(R.id.tv_pm25);
+        tvPm10 = findViewById(R.id.tv_pm10);
         rvAlerts = findViewById(R.id.rv_alerts);
         btnToday = findViewById(R.id.btn_today);
         btnWeek = findViewById(R.id.btn_week);
@@ -144,8 +145,7 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<com.example.modelfarm.network.models.PageResponse<Device>>> call, Response<ApiResponse<com.example.modelfarm.network.models.PageResponse<Device>>> response) {
                 if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null && !response.body().getData().getRecords().isEmpty()) {
-                    Device sensor = response.body().getData().getRecords().get(0);
-                    fetchLatestData(sensor.getId());
+                    fetchLatestData(response.body().getData().getRecords(), 0);
                 } else {
                     showEnvPlaceholders();
                 }
@@ -157,37 +157,46 @@ public class EnvironmentMonitoringEnhancedActivity extends AppCompatActivity {
         });
     }
 
-    private void fetchLatestData(int deviceId) {
+    private void fetchLatestData(List<Device> sensors, int sensorIndex) {
+        if (sensorIndex >= sensors.size()) {
+            showEnvPlaceholders();
+            return;
+        }
+
+        int deviceId = sensors.get(sensorIndex).getId();
         DeviceDataApiService dataApi = RetrofitClient.create(this, DeviceDataApiService.class);
         dataApi.getLatestDeviceData(deviceId).enqueue(new Callback<ApiResponse<DeviceData>>() {
             @Override
             public void onResponse(Call<ApiResponse<DeviceData>> call, Response<ApiResponse<DeviceData>> response) {
                 if (response.isSuccessful() && response.body()!=null && response.body().getCode()==200 && response.body().getData()!=null) {
                     java.util.Map<String, Object> data = response.body().getData().getData();
-                    String temperature = data.get("temperature")!=null ? data.get("temperature").toString()+"°C" : "5°C";
-                    String humidity = data.get("humidity")!=null ? data.get("humidity").toString()+"%" : "68%";
-                    String light = data.get("light")!=null ? data.get("light").toString()+"Lux" : "41Lux";
-                    tvTemperature.setText(temperature);
-                    tvHumidity.setText(humidity);
-                    tvLight.setText(light);
+                    if (DeviceDataParser.hasEnvironmentReadings(data)) {
+                        showEnvironmentData(data);
+                    } else {
+                        fetchLatestData(sensors, sensorIndex + 1);
+                    }
                 } else {
-                    showEnvPlaceholders();
+                    fetchLatestData(sensors, sensorIndex + 1);
                 }
             }
             @Override
             public void onFailure(Call<ApiResponse<DeviceData>> call, Throwable t) {
-                showEnvPlaceholders();
+                fetchLatestData(sensors, sensorIndex + 1);
             }
         });
     }
 
+    private void showEnvironmentData(java.util.Map<String, Object> data) {
+        tvTemperature.setText(DeviceDataParser.parseTemperature(data));
+        tvHumidity.setText(DeviceDataParser.parseHumidity(data));
+        tvCo2.setText(DeviceDataParser.parseCO2(data));
+        tvNh3.setText(DeviceDataParser.parseNH3(data));
+        tvPm25.setText(DeviceDataParser.parsePM25(data));
+        tvPm10.setText(DeviceDataParser.parsePM10(data));
+    }
+
     private void showEnvPlaceholders() {
-        tvTemperature.setText("5°C");
-        tvHumidity.setText("68%");
-        tvLight.setText("31Lux");
-        if (tvSoilHumidity != null) tvSoilHumidity.setText("55%");
-        if (tvCo2 != null) tvCo2.setText("41ppm");
-        if (tvWindSpeed != null) tvWindSpeed.setText("0.3m/s");
+        showEnvironmentData(null);
     }
 
     private void loadAlertData() {

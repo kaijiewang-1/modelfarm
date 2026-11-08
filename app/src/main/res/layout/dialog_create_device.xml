@@ -72,7 +72,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="推流名称（仅摄像头）"
+            android:hint="RTMP推流地址（仅摄像头）"
             android:layout_marginTop="16dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -80,7 +80,7 @@
                 android:id="@+id/et_push_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:inputType="textUri" />
 
         </com.google.android.material.textfield.TextInputLayout>
 

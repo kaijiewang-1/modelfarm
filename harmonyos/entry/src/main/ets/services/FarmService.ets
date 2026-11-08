@@ -1,5 +1,8 @@
 import {
   AdminMember,
+  CreateDeviceRequest,
+  CreateOrderRequest,
+  AcceptOrderRequest,
   CreateEnterpriseRequest,
   Device,
 
@@ -73,6 +76,29 @@ export class FarmService {
       query.type = type
     }
     return this.client.get<PageResult<Device>>('/device/page', query)
+  }
+
+  getSiteDevices(siteId: number): Promise<Device[]> {
+    const query: QueryParams = { farmSiteId: siteId }
+    return this.client.get<Device[]>('/farmSite/devices', query)
+  }
+
+  getDevice(deviceId: number): Promise<Device> {
+    const query: QueryParams = { deviceId: deviceId }
+    return this.client.get<Device>('/device', query)
+  }
+
+  createDevice(request: CreateDeviceRequest): Promise<number> {
+    return this.client.post<number>('/device', request)
+  }
+
+  createOrder(request: CreateOrderRequest): Promise<number> {
+    return this.client.post<number>('/order', request)
+  }
+
+  acceptOrder(orderId: number): Promise<void> {
+    const request: AcceptOrderRequest = { orderId: orderId }
+    return this.client.post<void>('/order/accept', request)
   }
 
   getLatestDeviceData(deviceId: number): Promise<DeviceData> {

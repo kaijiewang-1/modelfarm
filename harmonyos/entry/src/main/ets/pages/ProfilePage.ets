@@ -36,10 +36,13 @@ struct ProfilePage {
     } catch (error) {
       // Local session must still be cleared if the server is unreachable.
     }
-    await AuthStore.getInstance().clearSession()
-    promptAction.showToast({ message: '已安全退出' })
-    router.replaceUrl({ url: 'pages/LoginPage' })
-    this.signingOut = false
+    try {
+      await AuthStore.getInstance().clearSession()
+    } finally {
+      router.clear()
+      router.replaceUrl({ url: 'pages/LoginPage' })
+      this.signingOut = false
+    }
   }
 
   @Builder

@@ -34,10 +34,12 @@ import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.Device;
 import com.example.modelfarm.network.models.UpdateDeviceRequest;
 import com.example.modelfarm.network.services.DeviceApiService;
+import com.example.modelfarm.utils.StreamUrlResolver;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -67,6 +69,7 @@ public class LiveStreamActivity extends AppCompatActivity {
     private String deviceName;
     private Device currentDevice;
     private String currentStreamUrl;
+    private String intentStreamUrl;
 
     private final Player.Listener playerListener = new Player.Listener() {
         @Override
@@ -89,15 +92,14 @@ public class LiveStreamActivity extends AppCompatActivity {
             tvStreamStatus.setText(getString(R.string.stream_status_error));
             
             // 显示更详细的错误信息
-            String errorMsg = "播放错误";
+            String errorMsg = getString(R.string.stream_overlay_error);
             if (error != null && error.getMessage() != null) {
-                errorMsg = error.getMessage();
-                // 简化错误信息显示
-                if (errorMsg.contains("timeout")) {
+                String technicalMessage = error.getMessage();
+                if (technicalMessage.contains("timeout")) {
                     errorMsg = "连接超时，请检查网络或稍后重试";
-                } else if (errorMsg.contains("Socket")) {
+                } else if (technicalMessage.contains("Socket")) {
                     errorMsg = "网络连接失败，请检查网络";
-                } else if (errorMsg.contains("HttpDataSource")) {
+                } else if (technicalMessage.contains("HttpDataSource")) {
                     errorMsg = "无法连接到视频流服务器";
                 }
             }
@@ -141,8 +143,7 @@ public class LiveStreamActivity extends AppCompatActivity {
         // 设置更新密钥按钮
         MaterialButton btnUpdateSecret = findViewById(R.id.btnUpdateSecret);
         if (btnUpdateSecret != null) {
-            btnUpdateSecret.setVisibility(View.VISIBLE);
-            btnUpdateSecret.setOnClickListener(v -> showUpdateSecretDialog());
+            btnUpdateSecret.setVisibility(View.GONE);
         }
     }
 
@@ -150,6 +151,7 @@ public class LiveStreamActivity extends AppCompatActivity {
         Intent intent = getIntent();
         deviceId = intent.getIntExtra("device_id", -1);
         deviceName = intent.getStringExtra("device_name");
+        intentStreamUrl = StreamUrlResolver.resolve(intent.getStringExtra("push_name"));
 
         if (!TextUtils.isEmpty(deviceName)) {
             tvDeviceName.setText(deviceName);
@@ -179,10 +181,7 @@ public class LiveStreamActivity extends AppCompatActivity {
      */
     private void loadStreamUrl() {
         if (deviceId <= 0) {
-            stopPlayback(false, null);
-            tvStreamStatus.setText(getString(R.string.stream_status_error));
-            tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
-            showOverlayMessage("设备ID无效");
+            playResolvedStream(intentStreamUrl);
             return;
         }
 
@@ -199,25 +198,25 @@ public class LiveStreamActivity extends AppCompatActivity {
                     if (response.isSuccessful() && response.body() != null && response.body().getCode() == 200) {
                         Device device = response.body().getData();
                         currentDevice = device;
-                        if (device != null && !TextUtils.isEmpty(device.getUrl())) {
-                            String streamUrl = device.getUrl();
-                            currentStreamUrl = streamUrl;
-                            // 显示推流信息
-                            displayStreamInfo(streamUrl);
-                            tvStreamUrl.setText(streamUrl);
-                            attemptPlayback(streamUrl);
+                        String streamUrl = device == null
+                            ? intentStreamUrl
+                            : StreamUrlResolver.resolve(device.getPushName());
+                        if (streamUrl == null) {
+                            streamUrl = intentStreamUrl;
+                        }
+                        if (streamUrl != null) {
+                            playResolvedStream(streamUrl);
                         } else {
                             stopPlayback(false, null);
                             tvStreamStatus.setText(getString(R.string.stream_status_error));
                             tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
-                            showOverlayMessage("设备未配置推流地址");
+                            showOverlayMessage("设备未配置完整的 RTMP 推流地址");
                         }
                     } else {
                         stopPlayback(false, null);
                         tvStreamStatus.setText(getString(R.string.stream_status_error));
                         tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
-                        String errorMsg = response.body() != null ? response.body().getMessage() : "获取推流地址失败";
-                        showOverlayMessage(errorMsg);
+                        showOverlayMessage("获取推流地址失败，请稍后重试");
                     }
                 });
             }
@@ -226,24 +225,46 @@ public class LiveStreamActivity extends AppCompatActivity {
             public void onFailure(Call<ApiResponse<Device>> call, Throwable t) {
                 runOnUiThread(() -> {
                     progressBuffering.setVisibility(View.GONE);
-                    stopPlayback(false, null);
-                    tvStreamStatus.setText(getString(R.string.stream_status_error));
-                    tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
-                    showOverlayMessage("网络错误: " + t.getMessage());
+                    if (intentStreamUrl != null) {
+                        playResolvedStream(intentStreamUrl);
+                    } else {
+                        stopPlayback(false, null);
+                        tvStreamStatus.setText(getString(R.string.stream_status_error));
+                        tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
+                        showOverlayMessage("获取推流地址失败，请稍后重试");
+                    }
                 });
+                android.util.Log.e("LiveStream", "Unable to refresh camera configuration", t);
             }
         });
+    }
+
+    private void playResolvedStream(String streamUrl) {
+        String resolvedUrl = StreamUrlResolver.resolve(streamUrl);
+        if (resolvedUrl == null) {
+            stopPlayback(false, null);
+            tvStreamStatus.setText(getString(R.string.stream_status_error));
+            tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
+            showOverlayMessage("设备未配置完整的 RTMP 推流地址");
+            return;
+        }
+
+        currentStreamUrl = resolvedUrl;
+        displayStreamInfo(resolvedUrl);
+        tvStreamUrl.setText(resolvedUrl);
+        attemptPlayback(resolvedUrl);
     }
 
     /**
      * 开始播放推流（使用后端提供的完整URL）
      */
     private void attemptPlayback(String streamUrl) {
-        if (TextUtils.isEmpty(streamUrl)) {
+        String resolvedUrl = StreamUrlResolver.resolve(streamUrl);
+        if (resolvedUrl == null) {
             stopPlayback(false, null);
             tvStreamStatus.setText(getString(R.string.stream_status_error));
             tvStreamUrl.setText(getString(R.string.stream_url_placeholder));
-            showOverlayMessage("推流地址为空");
+            showOverlayMessage("推流地址无效");
             return;
         }
 
@@ -264,12 +285,6 @@ public class LiveStreamActivity extends AppCompatActivity {
             .setBackBuffer(50000, true) // 保留50秒的后台缓冲
             .build();
 
-        // 创建ExoPlayer实例，使用自定义的LoadControl
-        exoPlayer = new ExoPlayer.Builder(this)
-            .setRenderersFactory(new DefaultRenderersFactory(this))
-            .setLoadControl(loadControl)
-            .build();
-
         // 创建 RenderersFactory 并配置软件解码模式
         DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(this);
 
@@ -286,7 +301,7 @@ public class LiveStreamActivity extends AppCompatActivity {
         playerView.setPlayer(exoPlayer);
         
         // 创建MediaItem，直接使用后端提供的完整URL
-        MediaItem mediaItem = MediaItem.fromUri(streamUrl);
+        MediaItem mediaItem = MediaItem.fromUri(resolvedUrl);
         
         exoPlayer.setMediaItem(mediaItem);
         exoPlayer.prepare();
@@ -357,35 +372,18 @@ public class LiveStreamActivity extends AppCompatActivity {
             String protocol = uri.getScheme(); // rtmp
             String host = uri.getHost(); // 124.71.97.178
             String path = uri.getPath(); // /live/songzan
-            String query = uri.getQuery(); // secret=0d0a59bd36404152beab3f19e74e7813
             
             // 解析路径获取应用名和流名称
             String[] pathParts = path != null ? path.split("/") : new String[0];
             String appName = pathParts.length > 1 ? pathParts[1] : "";
             String streamName = pathParts.length > 2 ? pathParts[2] : "";
             
-            // 解析查询参数获取密钥
-            String secret = "";
-            if (!TextUtils.isEmpty(query) && query.contains("secret=")) {
-                String[] params = query.split("&");
-                for (String param : params) {
-                    if (param.startsWith("secret=")) {
-                        secret = param.substring(7);
-                        break;
-                    }
-                }
-            }
-            
             // 构建信息字符串
             StringBuilder info = new StringBuilder();
-            info.append("协议: ").append(protocol != null ? protocol.toUpperCase() : "-").append("\n");
+            info.append("协议: ").append(protocol != null ? protocol.toUpperCase(Locale.ROOT) : "-").append("\n");
             info.append("服务器IP: ").append(host != null ? host : "-").append("\n");
             info.append("应用名: ").append(appName).append("\n");
             info.append("流名称: ").append(streamName).append("\n");
-            if (!TextUtils.isEmpty(secret)) {
-                info.append("密钥: ").append(secret);
-            }
-            
             // 可以在这里添加一个TextView来显示详细信息，或者通过Toast显示
             android.util.Log.d("LiveStream", "推流信息:\n" + info.toString());
         } catch (URISyntaxException e) {

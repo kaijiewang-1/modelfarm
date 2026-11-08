@@ -1,155 +1,175 @@
-import { promptAction, router } from '@kit.ArkUI'
-import { CameraDevice, FarmSite, LiveTicket } from '../models/Models'
+import { router } from '@kit.ArkUI'
+import { webview } from '@kit.ArkWeb'
+import { PageHeader, StatePanel } from '../components/CommonComponents'
+import { CameraDevice, FarmSite, PageParams, LiveTicket } from '../models/Models'
 import { FarmService } from '../services/FarmService'
 import { LiveService } from '../services/LiveService'
+import { resolvePlaybackUrl } from '../services/StreamResolver'
+
+interface PlaybackConfig {
+  url: string
+  wsUrl?: string
+  ticket?: string
+  streamId?: string
+  algoEpoch?: number
+}
 
 @Entry
 @Component
 struct LivePage {
+  @State sites: FarmSite[] = []
   @State cameras: CameraDevice[] = []
-  @State selectedCameraId: number = -1
-  @State selectedSite: FarmSite | undefined = undefined
-  @State ticket: LiveTicket | undefined = undefined
+  @State selectedSiteId: number = 0
+  @State selectedCameraId: number = 0
   @State loading: boolean = true
   @State requestingTicket: boolean = false
   @State errorText: string = ''
+  @State playerVisible: boolean = false
+  @State playingName: string = ''
   private farmService: FarmService = FarmService.getInstance()
   private liveService: LiveService = LiveService.getInstance()
+  private controller: webview.WebviewController = new webview.WebviewController()
+  private playerReady: boolean = false
+  private playback: PlaybackConfig | undefined = undefined
+  private requestVersion: number = 0
 
   aboutToAppear(): void {
+    const params = router.getParams() as PageParams
+    this.selectedSiteId = params?.siteId || 0
+    this.selectedCameraId = params?.deviceId || 0
     this.load()
   }
 
+  onPageHide(): void { this.stop() }
+  aboutToDisappear(): void { this.stop() }
+
+  private stop(hide: boolean = true): void {
+    this.requestVersion++
+    if (this.playerReady) {
+      this.controller.runJavaScript('window.stopPlayback && window.stopPlayback()').catch(() => {})
+    }
+    this.playback = undefined
+    if (hide) {
+      this.playerReady = false
+      this.playerVisible = false
+    }
+  }
+
   private async load(): Promise<void> {
+    this.stop()
     this.loading = true
     this.errorText = ''
     try {
       const farms = await this.farmService.getFarms()
-      if (farms.length === 0) {
-        this.errorText = '暂无养殖场，无法加载摄像头'
-        return
+      let sites: FarmSite[] = []
+      for (const farm of farms || []) {
+        sites = sites.concat(await this.farmService.getFarmSites(farm.id) || [])
       }
-      const sites = await this.farmService.getFarmSites(farms[0].id)
-      if (sites.length === 0) {
-        this.errorText = '暂无养殖点，无法加载摄像头'
-        return
-      }
-      this.selectedSite = sites[0]
-      this.cameras = await this.liveService.getCameras(sites[0].id)
-      if (this.cameras.length > 0) {
-        this.selectedCameraId = this.cameras[0].id
-      }
+      this.sites = sites
+      if (sites.length === 0) { this.cameras = []; return }
+      const selected = sites.find((site: FarmSite) => site.id === this.selectedSiteId)
+      await this.loadCameras(selected ? selected.id : sites[0].id)
     } catch (error) {
       this.errorText = error instanceof Error ? error.message : '摄像头加载失败'
-    } finally {
-      this.loading = false
-    }
+    } finally { this.loading = false }
   }
 
-  private async createTicket(camera: CameraDevice): Promise<void> {
-    this.selectedCameraId = camera.id
-    this.requestingTicket = true
-    this.ticket = undefined
+  private async loadCameras(siteId: number): Promise<void> {
+    this.stop()
+    const version: number = this.requestVersion
+    this.selectedSiteId = siteId
+    this.cameras = []
     this.errorText = ''
+    this.loading = true
     try {
-      this.ticket = await this.liveService.requestTicket(camera.id)
+      const cameras = await this.liveService.getCameras(siteId)
+      if (version === this.requestVersion) { this.cameras = cameras || [] }
     } catch (error) {
-      this.errorText = error instanceof Error ? error.message : '智慧直播初始化失败'
-    } finally {
-      this.requestingTicket = false
-    }
+      if (version === this.requestVersion) { this.errorText = error instanceof Error ? error.message : '摄像头加载失败' }
+    } finally { if (version === this.requestVersion) { this.loading = false } }
   }
 
-  @Builder
-  private cameraCard(camera: CameraDevice) {
-    Column({ space: 8 }) {
-      Row({ space: 10 }) {
-        Text('视')
-          .width(38)
-          .height(38)
-          .textAlign(TextAlign.Center)
-          .fontColor('#176B43')
-          .backgroundColor('#E0EFE6')
-          .borderRadius(6)
-        Column({ space: 3 }) {
-          Text(camera.name).fontSize(15).fontWeight(FontWeight.Bold).fontColor('#17211B')
-          Text(`设备 ${camera.id} · ${camera.streamId || camera.pushName || '未配置流'}`)
-            .fontSize(11).fontColor('#68736C').maxLines(1)
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-        Text(Number(camera.status) === 1 ? '在线' : '离线')
-          .fontSize(11)
-          .fontColor(Number(camera.status) === 1 ? '#176B43' : '#8A4D3B')
+  private async play(camera: CameraDevice, smart: boolean): Promise<void> {
+    this.stop(false)
+    const version: number = this.requestVersion
+    this.selectedCameraId = camera.id
+    this.errorText = ''
+    this.requestingTicket = smart
+    try {
+      let config: PlaybackConfig = { url: resolvePlaybackUrl(camera.pushName, camera.url) }
+      if (smart) {
+        const ticket: LiveTicket = await this.liveService.requestDetectionSession(camera.id)
+        config = { url: resolvePlaybackUrl('', ticket.algoFlvUrl), wsUrl: ticket.wsUrl,
+          ticket: ticket.ticket, streamId: ticket.streamId, algoEpoch: ticket.algoEpoch }
       }
-      .width('100%')
-      Text(camera.url || '后端未下发 HTTP-FLV 地址')
-        .fontSize(11).fontColor('#7D8780').maxLines(1).width('100%')
-      Button(this.requestingTicket && this.selectedCameraId === camera.id ? '初始化中…' : '获取智慧直播票据')
-        .width('100%').height(40).fontSize(12)
-        .fontColor(Color.White).backgroundColor('#176B43').borderRadius(5)
-        .enabled(!this.requestingTicket)
-        .onClick(() => this.createTicket(camera))
+      if (version !== this.requestVersion) { return }
+      if (config.url.length === 0) { throw new Error(smart ? '暂未提供智慧视频源，请使用原画直播' : '该摄像头未配置有效视频源') }
+      this.playback = config
+      this.playingName = `${camera.name} · ${smart ? '智慧直播' : '原画直播'}`
+      this.playerVisible = true
+      if (this.playerReady) { this.startPlayer() }
+    } catch (error) {
+      if (version === this.requestVersion) { this.errorText = error instanceof Error ? error.message : '视频加载失败' }
+    } finally { if (version === this.requestVersion) { this.requestingTicket = false } }
+  }
+
+  private startPlayer(): void {
+    this.playerReady = true
+    if (this.playback) {
+      // JSON serialization passes data as a JS value; never interpolate a URL as executable code.
+      this.controller.runJavaScript(`window.startPlayback(${JSON.stringify(this.playback)})`)
+        .catch(() => this.errorText = '播放器初始化失败，请重试')
     }
-    .width('100%').padding(14).backgroundColor(Color.White).borderRadius(7)
   }
 
   build() {
-    Column() {
-      Row() {
-        Column({ space: 3 }) {
-          Text('视频中心').fontSize(22).fontWeight(FontWeight.Bold).fontColor('#17211B')
-          Text(this.selectedSite ? `${this.selectedSite.name} · ${this.cameras.length} 路摄像头` : '摄像头与智慧直播')
-            .fontSize(12).fontColor('#68736C')
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-        Button('刷新').fontSize(12).fontColor('#176B43').backgroundColor('#E0EFE6')
+    Column({ space: 10 }) {
+      PageHeader({ title: '视频中心', subtitle: '养殖现场 · 原画与智慧直播' })
+      Row({ space: 10 }) {
+        Select(this.sites.map((site: FarmSite): SelectOption => { return { value: site.name } }))
+          .value(this.sites.find((site: FarmSite) => site.id === this.selectedSiteId)?.name || '选择养殖点')
+          .layoutWeight(1).enabled(!this.loading && !this.requestingTicket)
+          .onSelect((index: number) => this.loadCameras(this.sites[index].id))
+        Button('刷新').fontColor('#176B43').backgroundColor('#E0EFE6').enabled(!this.loading)
           .onClick(() => this.load())
+      }.width('100%').padding({ left: 18, right: 18 })
+      if (this.playerVisible) {
+        Text(this.playingName).fontSize(14).fontWeight(FontWeight.Bold).fontColor('#17211B')
+        Web({ src: $rawfile('live/player.html'), controller: this.controller })
+          .javaScriptAccess(true).domStorageAccess(false).databaseAccess(false)
+          .mixedMode(MixedMode.All).height(340).width('100%')
+          .onPageEnd(() => this.startPlayer())
+          .onLoadIntercept((event) => {
+            const target: string = event?.data.getRequestUrl() || ''
+            return !target.startsWith('resource://') && !target.startsWith('file://') && target !== 'about:blank'
+          })
       }
-      .width('100%').padding({ left: 18, right: 18, top: 18, bottom: 12 })
-
-      if (this.ticket) {
-        Column({ space: 8 }) {
-          Text('智慧直播会话已创建').fontSize(15).fontWeight(FontWeight.Bold).fontColor('#176B43')
-          Text(`streamId: ${this.ticket.streamId}`).fontSize(11).fontColor('#536058')
-          Text(`WebSocket: ${this.ticket.wsUrl}`).fontSize(11).fontColor('#536058').maxLines(2)
-          Text('当前版本完成票据与地址联通；HTTP-FLV 播放与检测框绘制需接入设备媒体组件。')
-            .fontSize(11).fontColor('#68736C').lineHeight(16)
-        }
-        .width('100%').margin({ left: 18, right: 18, bottom: 12 }).padding(14)
-        .backgroundColor('#EAF5EE').borderRadius(7)
+      if (this.errorText.length > 0) {
+        Text(this.errorText).fontColor('#B33B2E').fontSize(13).width('100%').padding({ left: 18, right: 18 })
       }
-
-      if (this.loading || this.errorText.length > 0 || this.cameras.length === 0) {
-        Column({ space: 10 }) {
-          if (this.loading) {
-            LoadingProgress().width(30).height(30).color('#176B43')
-          }
-          Text(this.errorText || '暂无摄像头').fontSize(13).fontColor('#68736C')
-          if (this.errorText.length > 0) {
-            Button('重试').height(38).fontColor('#176B43').backgroundColor('#E0EFE6')
-              .onClick(() => this.load())
-          }
-        }
-        .layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
+      if (this.loading || this.cameras.length === 0) {
+        StatePanel({ loading: this.loading, message: this.errorText || '当前养殖点暂无摄像头' })
       } else {
         List({ space: 10 }) {
           ForEach(this.cameras, (camera: CameraDevice) => {
-            ListItem() { this.cameraCard(camera) }
+            ListItem() {
+              Column({ space: 10 }) {
+                Row() {
+                  Text(camera.name).layoutWeight(1).fontSize(16).fontWeight(FontWeight.Bold).fontColor('#17211B')
+                  Text(Number(camera.status) === 1 ? '在线' : '离线').fontSize(12).fontColor('#68736C')
+                }.width('100%')
+                Row({ space: 12 }) {
+                  Button('原画直播').layoutWeight(1).fontColor(Color.White).backgroundColor('#176B43')
+                    .enabled(!this.requestingTicket).onClick(() => this.play(camera, false))
+                  Button(this.requestingTicket && this.selectedCameraId === camera.id ? '连接中…' : '智慧直播')
+                    .layoutWeight(1).fontColor('#176B43').backgroundColor('#E0EFE6')
+                    .enabled(!this.requestingTicket).onClick(() => this.play(camera, true))
+                }
+              }.width('100%').padding(16).backgroundColor(Color.White).borderRadius(8)
+            }
           }, (camera: CameraDevice) => String(camera.id))
-        }
-        .layoutWeight(1).width('100%').padding({ left: 18, right: 18, bottom: 18 })
+        }.layoutWeight(1).width('100%').padding({ left: 18, right: 18, bottom: 18 })
       }
-
-      Row() {
-        Button('首页').layoutWeight(1).fontSize(12).fontColor('#68736C').backgroundColor(Color.Transparent)
-          .onClick(() => router.replaceUrl({ url: 'pages/HomePage' }))
-        Button('设备').layoutWeight(1).fontSize(12).fontColor('#68736C').backgroundColor(Color.Transparent)
-          .onClick(() => router.replaceUrl({ url: 'pages/DevicePage' }))
-      }
-      .width('100%').height(56).backgroundColor(Color.White)
-    }
-    .width('100%').height('100%').backgroundColor('#F4F7F2')
+    }.width('100%').height('100%').backgroundColor('#F4F7F2')
   }
 }

@@ -45,13 +45,17 @@ export class AuthStore {
     if (!this.store) {
       throw new Error('AuthStore is not initialized')
     }
+    if (!response || !response.satoken || typeof response.satoken.tokenValue !== 'string' ||
+      response.satoken.tokenValue.length === 0 || !(response.userId > 0)) {
+      throw new Error('登录响应无效，请重试')
+    }
+    await this.store.put(KEY_TOKEN, response.satoken.tokenValue)
+    await this.store.put(KEY_USER_ID, response.userId)
+    await this.store.put(KEY_ENTERPRISE_ID, response.enterpriseId || 0)
+    await this.store.flush()
     this.tokenValue = response.satoken.tokenValue
     this.userIdValue = response.userId
-    this.enterpriseIdValue = response.enterpriseId
-    await this.store.put(KEY_TOKEN, this.tokenValue)
-    await this.store.put(KEY_USER_ID, this.userIdValue)
-    await this.store.put(KEY_ENTERPRISE_ID, this.enterpriseIdValue)
-    await this.store.flush()
+    this.enterpriseIdValue = response.enterpriseId || 0
   }
 
   async updateEnterpriseId(enterpriseId: number): Promise<void> {

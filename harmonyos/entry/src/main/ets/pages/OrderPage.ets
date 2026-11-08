@@ -1,4 +1,4 @@
-import { promptAction } from '@kit.ArkUI'
+import { promptAction, router } from '@kit.ArkUI'
 import { PageHeader, StatePanel, StatusTag } from '../components/CommonComponents'
 import { OrderWithMedias, orderStatusText } from '../models/Models'
 import { FarmService } from '../services/FarmService'
@@ -12,7 +12,7 @@ struct OrderPage {
   @State errorText: string = ''
   private service: FarmService = FarmService.getInstance()
 
-  aboutToAppear(): void {
+  onPageShow(): void {
     this.load()
   }
 
@@ -29,6 +29,7 @@ struct OrderPage {
   }
 
   private async complete(orderId: number): Promise<void> {
+    if (this.actionOrderId !== 0) { return }
     this.actionOrderId = orderId
     try {
       await this.service.completeOrder(orderId)
@@ -41,9 +42,27 @@ struct OrderPage {
     }
   }
 
+  private async accept(orderId: number): Promise<void> {
+    if (this.actionOrderId !== 0) { return }
+    this.actionOrderId = orderId
+    try {
+      await this.service.acceptOrder(orderId)
+      promptAction.showToast({ message: '工单已认领' })
+      await this.load()
+    } catch (error) {
+      promptAction.showToast({ message: error instanceof Error ? error.message : '认领失败' })
+    } finally { this.actionOrderId = 0 }
+  }
+
   build() {
     Column() {
       PageHeader({ title: '工单管理', subtitle: '现场问题处理闭环' })
+      Row({ space: 12 }) {
+        Button('新建工单').height(36).fontColor(Color.White).backgroundColor('#176B43')
+          .onClick(() => router.pushUrl({ url: 'pages/OrderCreatePage' }))
+        Button('刷新').height(36).fontColor('#176B43').backgroundColor('#E0EFE6')
+          .enabled(!this.loading && this.actionOrderId === 0).onClick(() => this.load())
+      }.width('100%').padding({ left: 18, right: 18, bottom: 12 })
       if (this.loading || this.errorText.length > 0 || this.orders.length === 0) {
         StatePanel({ loading: this.loading, message: this.errorText || '暂无工单' })
       } else {
@@ -58,8 +77,8 @@ struct OrderPage {
                   Blank()
                   StatusTag({
                     text: orderStatusText(item.order.status),
-                    positive: item.order.status === '2',
-                    warning: item.order.status === '3'
+                    positive: String(item.order.status) === '2',
+                    warning: String(item.order.status) === '3'
                   })
                 }
                 .width('100%')
@@ -73,13 +92,16 @@ struct OrderPage {
                   .width('100%')
                   .fontSize(13)
                   .fontColor('#68736C')
-                  .maxLines(3)
                 Row() {
                   Text(item.order.createdAt)
                     .fontSize(11)
                     .fontColor('#8A938D')
                   Blank()
-                  if (item.order.status !== '2') {
+                  if (String(item.order.status) !== '2') {
+                    if (!item.order.acceptedId && Number(item.order.isAccepted) !== 1) {
+                      Button('认领').height(34).fontSize(12).fontColor('#176B43').backgroundColor('#E0EFE6')
+                        .enabled(this.actionOrderId === 0).onClick(() => this.accept(item.order.id))
+                    }
                     Button(this.actionOrderId === item.order.id ? '处理中…' : '标记完成')
                       .height(34)
                       .fontSize(12)

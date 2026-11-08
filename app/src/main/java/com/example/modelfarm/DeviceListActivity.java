@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.modelfarm.network.RetrofitClient;
 import com.example.modelfarm.network.models.ApiResponse;
 import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.utils.StreamUrlResolver;
 import com.example.modelfarm.network.models.DeviceTypeEnum;
 import com.example.modelfarm.network.models.PageResponse;
 import com.example.modelfarm.network.services.DeviceApiService;
@@ -82,19 +83,16 @@ public class DeviceListActivity extends AppCompatActivity {
     }
 
     private void handleCameraDeviceClick(Device device) {
-        String pushName = device.getPushName();
-        if (TextUtils.isEmpty(pushName)) {
-            Toast.makeText(this, "该摄像头缺少推流名称，无法打开直播", Toast.LENGTH_LONG).show();
+        String streamUrl = StreamUrlResolver.resolve(device.getPushName());
+        if (streamUrl == null) {
+            Toast.makeText(this, "该摄像头未配置完整的 RTMP 推流地址", Toast.LENGTH_LONG).show();
             return;
         }
 
         Intent intent = new Intent(DeviceListActivity.this, LiveStreamActivity.class);
         intent.putExtra("device_id", device.getId());
         intent.putExtra("device_name", device.getName());
-        intent.putExtra("push_name", pushName);
-        if (!TextUtils.isEmpty(device.getUrl())) {
-            intent.putExtra("stream_url", device.getUrl());
-        }
+        intent.putExtra("push_name", streamUrl);
         startActivity(intent);
     }
 

@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,9 +20,17 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.modelfarm.R;
 import com.example.modelfarm.network.RetrofitClient;
+import com.example.modelfarm.network.models.SaToken;
+import com.example.modelfarm.network.services.AdminApiService;
 import com.example.modelfarm.network.services.EnterpriseApiService;
 import com.example.modelfarm.network.models.ApiResponse;
+import com.example.modelfarm.network.models.Device;
+import com.example.modelfarm.network.models.DeviceData;
+import com.example.modelfarm.network.models.PageResponse;
 import com.example.modelfarm.network.models.EnterpriseStats;
+import com.example.modelfarm.network.services.DeviceApiService;
+import com.example.modelfarm.network.services.DeviceDataApiService;
+import com.example.modelfarm.utils.DeviceDataParser;
 
 import company.company_info;
 import personal.profile;
@@ -33,6 +42,9 @@ import farm.farm_list;
 import logins.login;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 智慧养殖系统主控制台
@@ -46,7 +58,8 @@ public class DashboardActivity extends AppCompatActivity {
     private MaterialCardView cardCompanyInfo;
     private MaterialCardView cardProfile;
     private MaterialCardView cardOrderManagement;
-
+    private Button btnEnvMonitor;
+    private MaterialCardView cardAdmin;
     // 实时数据显示
     private TextView tvTemperature;
     private TextView tvHumidity;
@@ -58,17 +71,17 @@ public class DashboardActivity extends AppCompatActivity {
     // 数据更新处理器
     private Handler dataUpdateHandler = new Handler();
     private Runnable dataUpdateRunnable;
-    
+
     // API相关
     private EnterpriseApiService enterpriseApi;
-    
+    private AdminApiService adminApiService;
     // 动画和交互
     private Animation cardClickAnimation;
     private Animation fadeInAnimation;
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "SmartFarmPrefs";
     private static final String KEY_FIRST_VISIT = "first_visit";
-    
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +106,7 @@ public class DashboardActivity extends AppCompatActivity {
      */
     private void initApiComponents() {
         enterpriseApi = RetrofitClient.create(this, EnterpriseApiService.class);
+        adminApiService = RetrofitClient.create(this, AdminApiService.class);
     }
 
     private void initViews() {
@@ -102,7 +116,8 @@ public class DashboardActivity extends AppCompatActivity {
         cardCompanyInfo = findViewById(R.id.card_company_info);
         cardProfile = findViewById(R.id.card_profile);
         cardOrderManagement = findViewById(R.id.card_order_management);
-
+        cardAdmin = findViewById(R.id.card_admin);
+        btnEnvMonitor = findViewById(R.id.btn_env_detail);
         // 实时数据显示
         tvTemperature = findViewById(R.id.tv_temperature);
         tvHumidity = findViewById(R.id.tv_humidity);
@@ -141,8 +156,7 @@ public class DashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(DashboardActivity.this, OrderListActivity.class));
             } else if (itemId == R.id.menu_company) {
                 startActivity(new Intent(DashboardActivity.this, company_info.class));
-            }
-               else {
+            } else {
                 return false;
             }
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
@@ -163,6 +177,21 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        //进入环境监控页
+        btnEnvMonitor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                v.startAnimation(cardClickAnimation);
+                Intent intent = new Intent(DashboardActivity.this, EnvironmentMonitoringEnhancedActivity.class);
+                try {
+                    startActivity(intent);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            }
+        });
+
         // 设备管理 - 智能设备监控
         cardDeviceManagement.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -217,16 +246,44 @@ public class DashboardActivity extends AppCompatActivity {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
         });
-
+        //进入管理员页面
+        cardAdmin.setOnClickListener(new View.OnClickListener() {
+                                         @Override
+                                         public void onClick(View v) {
+                                             checkAdmin(v);
+                                         }
+                                     }
+        );
     }
 
+    private void checkAdmin(View v) {
+        adminApiService.check().enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                if (response.body().getCode() == 200) {
+                    v.startAnimation(cardClickAnimation);
+                    Intent intent = new Intent(DashboardActivity.this, AdminActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                }else{
+                    Toast.makeText(DashboardActivity.this, "无企业权限", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable throwable) {
+                Toast.makeText(DashboardActivity.this, "无企业权限", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
 
     /**
      * 更新实时数据
      */
     private void updateRealTimeData() {
-        tvTemperature.setText("5°C");
-        tvHumidity.setText("68%");
+        showEnvironmentPlaceholders();
+        updateEnvironmentData();
         tvWelcome.setText("欢迎使用数智化养殖软件平台");
         enterpriseApi.getEnterpriseStats().enqueue(new Callback<ApiResponse<EnterpriseStats>>() {
             @Override
@@ -240,6 +297,7 @@ public class DashboardActivity extends AppCompatActivity {
                     setDefaultStats();
                 }
             }
+
             @Override
             public void onFailure(Call<ApiResponse<EnterpriseStats>> call, Throwable t) {
                 setDefaultStats();
@@ -251,6 +309,70 @@ public class DashboardActivity extends AppCompatActivity {
                 tvAlertCount.setText("2个预警");
             }
         });
+    }
+
+    private void updateEnvironmentData() {
+        DeviceApiService deviceApi = RetrofitClient.create(this, DeviceApiService.class);
+        deviceApi.getDeviceList(1, 100, null, null, 2, null)
+            .enqueue(new Callback<ApiResponse<PageResponse<Device>>>() {
+                @Override
+                public void onResponse(
+                    Call<ApiResponse<PageResponse<Device>>> call,
+                    Response<ApiResponse<PageResponse<Device>>> response
+                ) {
+                    if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().getCode() == 200
+                        && response.body().getData() != null
+                        && !response.body().getData().getRecords().isEmpty()) {
+                        fetchLatestEnvironmentData(response.body().getData().getRecords(), 0);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<PageResponse<Device>>> call, Throwable throwable) {
+                    android.util.Log.w("Dashboard", "Unable to load sensor list", throwable);
+                }
+            });
+    }
+
+    private void fetchLatestEnvironmentData(List<Device> sensors, int sensorIndex) {
+        if (sensorIndex >= sensors.size()) {
+            return;
+        }
+
+        DeviceDataApiService dataApi = RetrofitClient.create(this, DeviceDataApiService.class);
+        dataApi.getLatestDeviceData(sensors.get(sensorIndex).getId())
+            .enqueue(new Callback<ApiResponse<DeviceData>>() {
+                @Override
+                public void onResponse(
+                    Call<ApiResponse<DeviceData>> call,
+                    Response<ApiResponse<DeviceData>> response
+                ) {
+                    if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().getCode() == 200
+                        && response.body().getData() != null) {
+                        Map<String, Object> data = response.body().getData().getData();
+                        if (DeviceDataParser.hasEnvironmentReadings(data)) {
+                            tvTemperature.setText(DeviceDataParser.parseTemperature(data));
+                            tvHumidity.setText(DeviceDataParser.parseHumidity(data));
+                            return;
+                        }
+                    }
+                    fetchLatestEnvironmentData(sensors, sensorIndex + 1);
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<DeviceData>> call, Throwable throwable) {
+                    fetchLatestEnvironmentData(sensors, sensorIndex + 1);
+                }
+            });
+    }
+
+    private void showEnvironmentPlaceholders() {
+        tvTemperature.setText(DeviceDataParser.parseTemperature(null));
+        tvHumidity.setText(DeviceDataParser.parseHumidity(null));
     }
 
     /**

@@ -20,6 +20,7 @@ struct LoginPage {
   }
 
   private async submit(account: string = this.account, password: string = this.password): Promise<void> {
+    if (this.loading) { return }
     const normalizedAccount: string = account.trim()
     if (!this.isValidAccount(normalizedAccount) || password.length < 6 || password.length > 64) {
       this.errorText = '请输入有效的手机号或用户名，密码至少 6 位'
@@ -36,6 +37,8 @@ struct LoginPage {
         throw new Error('Invalid session')
       }
       await AuthStore.getInstance().saveSession(response)
+      this.password = ''
+      router.clear()
       promptAction.showToast({ message: '登录成功' })
       const target: string = response.enterpriseId > 0 ? 'pages/HomePage' : 'pages/CompanySetupPage'
       router.replaceUrl({ url: target })
@@ -123,17 +126,6 @@ struct LoginPage {
             .borderRadius(6)
             .enabled(!this.loading)
             .onClick(() => this.submit())
-
-          Button('游客体验')
-            .width('100%')
-            .height(48)
-            .fontSize(14)
-            .fontColor('#176B43')
-            .backgroundColor(Color.Transparent)
-            .border({ width: 1, color: '#8CBBA2' })
-            .borderRadius(6)
-            .enabled(!this.loading)
-            .onClick(() => this.submit('13800138007', '138007'))
 
           Button('注册账号')
             .width('100%')

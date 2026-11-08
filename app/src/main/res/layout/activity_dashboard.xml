@@ -149,7 +149,7 @@
                         android:id="@+id/tv_temperature"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="25°C"
+                        android:text="--°C"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#FF5722" />
@@ -189,7 +189,7 @@
                         android:id="@+id/tv_humidity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="65%"
+                        android:text="--%"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#2196F3" />

@@ -1,4 +1,4 @@
-import { ApiClient } from './ApiClient'
+import { ApiClient, ApiError } from './ApiClient'
 import { CameraDevice, LiveTicket, LiveTicketRequest, QueryParams } from '../models/Models'
 
 /** API-only live service. Media playback is delegated to the device media capability. */
@@ -18,5 +18,18 @@ export class LiveService {
   requestTicket(deviceId: number): Promise<LiveTicket> {
     const body: LiveTicketRequest = { deviceId: deviceId }
     return this.client.post<LiveTicket>('/live/ticket', body)
+  }
+
+  async requestDetectionSession(deviceId: number): Promise<LiveTicket> {
+    const body: LiveTicketRequest = { deviceId: deviceId }
+    try {
+      return await this.client.post<LiveTicket>('/live/detection-session', body)
+    } catch (error) {
+      if (error instanceof ApiError && (error.statusCode === 404 || error.apiCode === 404)) {
+        return this.requestTicket(deviceId)
+      }
+      if (error instanceof Error) { throw error }
+      throw new Error('智慧直播服务暂不可用')
+    }
   }
 }

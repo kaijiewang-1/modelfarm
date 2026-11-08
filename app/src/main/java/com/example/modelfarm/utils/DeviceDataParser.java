@@ -12,34 +12,14 @@ public class DeviceDataParser {
      * 解析设备数据获取温度
      */
     public static String parseTemperature(Map<String, Object> data) {
-        if (data == null) return "--°C";
-        
-        Object temp = data.get("temperature");
-        if (temp != null) {
-            return temp.toString() + "°C";
-        }
-        
-        // 尝试其他可能的温度字段名
-        temp = data.get("temp");
-        if (temp != null) {
-            return temp.toString() + "°C";
-        }
-        
-        return "--°C";
+        return formatMetric(data, "--°C", "°C", "temperature", "temp");
     }
     
     /**
      * 解析设备数据获取湿度
      */
     public static String parseHumidity(Map<String, Object> data) {
-        if (data == null) return "--%";
-        
-        Object humidity = data.get("humidity");
-        if (humidity != null) {
-            return humidity.toString() + "%";
-        }
-        
-        return "--%";
+        return formatMetric(data, "--%", "%", "humidity", "humidity_percent");
     }
     
     /**
@@ -100,14 +80,39 @@ public class DeviceDataParser {
      * 解析设备数据获取二氧化碳浓度
      */
     public static String parseCO2(Map<String, Object> data) {
-        if (data == null) return "-- ppm";
-        
-        Object co2 = data.get("co2");
-        if (co2 != null) {
-            return co2.toString() + " ppm";
-        }
-        
-        return "-- ppm";
+        return formatMetric(data, "-- ppm", " ppm", "co2", "co2_ppm");
+    }
+
+    /**
+     * 解析设备数据获取氨气浓度
+     */
+    public static String parseNH3(Map<String, Object> data) {
+        return formatMetric(data, "-- ppm", " ppm", "nh3", "nh3_ppm");
+    }
+
+    /**
+     * 解析设备数据获取 PM2.5 浓度
+     */
+    public static String parsePM25(Map<String, Object> data) {
+        return formatMetric(data, "-- μg/m³", " μg/m³", "pm25", "pm2.5", "pm2_5", "pm25_ug_m3");
+    }
+
+    /**
+     * 解析设备数据获取 PM10 浓度
+     */
+    public static String parsePM10(Map<String, Object> data) {
+        return formatMetric(data, "-- μg/m³", " μg/m³", "pm10", "pm10_ug_m3");
+    }
+
+    /**
+     * 判断数据中是否包含环境监控页支持的任一读数
+     */
+    public static boolean hasEnvironmentReadings(Map<String, Object> data) {
+        return findFirstValue(data,
+            "temperature", "temp", "humidity", "humidity_percent",
+            "co2", "co2_ppm", "nh3", "nh3_ppm",
+            "pm25", "pm2.5", "pm2_5", "pm25_ug_m3",
+            "pm10", "pm10_ug_m3") != null;
     }
     
     /**
@@ -134,5 +139,29 @@ public class DeviceDataParser {
         }
         
         return "未知时间";
+    }
+
+    private static String formatMetric(
+        Map<String, Object> data,
+        String placeholder,
+        String unit,
+        String... keys
+    ) {
+        Object value = findFirstValue(data, keys);
+        return value == null ? placeholder : value.toString() + unit;
+    }
+
+    private static Object findFirstValue(Map<String, Object> data, String... keys) {
+        if (data == null || data.isEmpty()) {
+            return null;
+        }
+
+        for (String key : keys) {
+            Object value = data.get(key);
+            if (value != null && !value.toString().trim().isEmpty()) {
+                return value;
+            }
+        }
+        return null;
     }
 }
