@@ -60,6 +60,9 @@ export class ApiClient {
     if (query.siteId !== undefined) {
       segments.push('siteId=' + encodeURIComponent(String(query.siteId)))
     }
+    if (query.year !== undefined) {
+      segments.push('year=' + encodeURIComponent(String(query.year)))
+    }
     return segments.join('&')
   }
   private async request<T>(path: string, method: http.RequestMethod, body?: RequestBody): Promise<T> {
@@ -91,7 +94,8 @@ export class ApiClient {
       }
       const raw: string = String(response.result)
       const envelope: ApiEnvelope<T> = JSON.parse(raw) as ApiEnvelope<T>
-      if (!envelope || typeof envelope.code !== 'number') {
+      if (!envelope || typeof envelope.code !== 'number' ||
+        (envelope.message !== undefined && typeof envelope.message !== 'string')) {
         throw new ApiError('服务器返回的数据格式不正确', response.responseCode)
       }
       if (envelope.code !== 200) {

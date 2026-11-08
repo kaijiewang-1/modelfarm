@@ -12,7 +12,7 @@ struct FarmDetailPage {
   @State errorText: string = ''
   private farmId: number = 0
 
-  aboutToAppear(): void {
+  onPageShow(): void {
     const params = router.getParams() as PageParams
     this.farmId = params?.farmId || 0
     this.farmName = params?.farmName || '养殖场详情'
@@ -33,6 +33,8 @@ struct FarmDetailPage {
   build() {
     Column({ space: 12 }) {
       PageHeader({ title: this.farmName, subtitle: `${this.sites.length} 个养殖点` })
+      Button('新建养殖点').height(36).fontColor(Color.White).backgroundColor('#176B43')
+        .onClick(() => router.pushUrl({ url: 'pages/LocationCreatePage', params: { farmId: this.farmId, farmName: this.farmName } }))
       Button('刷新').height(36).fontColor('#176B43').backgroundColor('#E0EFE6')
         .enabled(!this.loading).onClick(() => this.load())
       if (this.loading || this.errorText.length > 0 || this.sites.length === 0) {

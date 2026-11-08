@@ -3,6 +3,10 @@ import {
   CreateDeviceRequest,
   CreateOrderRequest,
   AcceptOrderRequest,
+  CreateFarmRequest,
+  CreateSiteRequest,
+  FarmNotification,
+  MonthInoutData,
   CreateEnterpriseRequest,
   Device,
 
@@ -64,6 +68,31 @@ export class FarmService {
 
   getFarms(): Promise<Farm[]> {
     return this.client.get<Farm[]>('/enterprise/farms')
+  }
+
+  createFarm(request: CreateFarmRequest): Promise<number> {
+    return this.client.post<number>('/farm', request)
+  }
+
+  createSite(request: CreateSiteRequest): Promise<number> {
+    return this.client.post<number>('/farmSite', request)
+  }
+
+  getNotifications(): Promise<FarmNotification[]> {
+    return this.client.get<FarmNotification[]>('/notification/allNotDelete')
+  }
+
+  readNotification(notificationId: number): Promise<void> {
+    return this.client.put<void>(`/notification/readOne?notificationId=${encodeURIComponent(String(notificationId))}`)
+  }
+
+  readAllNotifications(): Promise<void> {
+    return this.client.put<void>('/notification/readAll')
+  }
+
+  getYearData(year: number): Promise<MonthInoutData[]> {
+    const query: QueryParams = { year: year }
+    return this.client.get<MonthInoutData[]>('/inout/yearData', query)
   }
 
   getFarmSites(farmId: number): Promise<FarmSite[]> {

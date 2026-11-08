@@ -28,11 +28,14 @@ struct HomePage {
   @State errorText: string = ''
   private service: FarmService = FarmService.getInstance()
   private refreshTimer: number = -1
+  private refreshing: boolean = false
   private modules: ModuleItem[] = [
     { mark: '场', title: '养殖场', caption: '场区与养殖点', url: 'pages/FarmPage', color: '#DFF1E7' },
     { mark: '设', title: '设备管理', caption: '在线与故障状态', url: 'pages/DevicePage', color: '#E3EEF8' },
     { mark: '视', title: '视频中心', caption: '摄像头与智慧直播', url: 'pages/LivePage', color: '#E7E3F4' },
     { mark: '单', title: '工单管理', caption: '任务闭环处理', url: 'pages/OrderPage', color: '#F8EBD7' },
+    { mark: '析', title: '数据分析', caption: '月度存栏与出入库', url: 'pages/AnalysisPage', color: '#E3EEF8' },
+    { mark: '信', title: '消息通知', caption: '告警与系统消息', url: 'pages/NotificationPage', color: '#F8EBD7' },
     { mark: '企', title: '企业信息', caption: '主体与联系人', url: 'pages/CompanyPage', color: '#EEE8F6' },
     { mark: '我', title: '个人资料', caption: '账号与安全', url: 'pages/ProfilePage', color: '#E8EFEB' },
     { mark: '权', title: '管理员', caption: '用户权限管理', url: 'pages/AdminPage', color: '#F5E5E3' }
@@ -52,7 +55,8 @@ struct HomePage {
   }
 
   private async refresh(): Promise<void> {
-    if (this.loading && this.refreshTimer >= 0) { return }
+    if (this.refreshing) { return }
+    this.refreshing = true
     this.loading = true
     this.errorText = ''
     try {
@@ -65,6 +69,7 @@ struct HomePage {
       promptAction.showToast({ message: error instanceof Error ? error.message : '数据刷新失败' })
     } finally {
       this.loading = false
+      this.refreshing = false
     }
   }
 
@@ -149,6 +154,10 @@ struct HomePage {
               .onClick(() => this.refresh())
           }
           .width('100%')
+
+          if (this.errorText.length > 0) {
+            Text(this.errorText).width('100%').fontSize(13).fontColor('#B33B2E')
+          }
 
           Column({ space: 18 }) {
             Row() {
@@ -250,7 +259,7 @@ struct HomePage {
           .columnsTemplate('1fr 1fr')
           .columnsGap(12)
           .rowsGap(12)
-          .height(336)
+          .height(420)
           .margin({ bottom: 20 })
         }
         .width('100%')

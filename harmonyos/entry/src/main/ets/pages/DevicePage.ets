@@ -17,15 +17,16 @@ struct DevicePage {
   }
 
   private async load(): Promise<void> {
+    const requestedType: number = this.selectedType
     this.loading = true
     this.errorText = ''
     try {
-      const result = await this.service.getDevices(this.selectedType === 0 ? undefined : this.selectedType)
-      this.devices = result.records
+      const result = await this.service.getDevices(requestedType === 0 ? undefined : requestedType)
+      if (requestedType === this.selectedType) { this.devices = result?.records || [] }
     } catch (error) {
-      this.errorText = error instanceof Error ? error.message : '设备加载失败'
+      if (requestedType === this.selectedType) { this.errorText = error instanceof Error ? error.message : '设备加载失败' }
     } finally {
-      this.loading = false
+      if (requestedType === this.selectedType) { this.loading = false }
     }
   }
 

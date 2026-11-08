@@ -12,7 +12,7 @@ struct FarmPage {
   @State errorText: string = ''
   private service: FarmService = FarmService.getInstance()
 
-  aboutToAppear(): void {
+  onPageShow(): void {
     this.load()
   }
 
@@ -40,6 +40,8 @@ struct FarmPage {
   build() {
     Column() {
       PageHeader({ title: '养殖场管理', subtitle: `${this.farms.length} 个场区` })
+      Button('新建养殖场').height(36).fontColor(Color.White).backgroundColor('#176B43')
+        .onClick(() => router.pushUrl({ url: 'pages/LocationCreatePage' }))
       Row({ space: 10 }) {
         TextInput({ text: this.query, placeholder: '搜索名称或地址' })
           .layoutWeight(1)

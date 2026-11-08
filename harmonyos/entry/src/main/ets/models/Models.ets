@@ -195,6 +195,35 @@ export interface QueryParams {
   farmId?: number
   farmSiteId?: number
   siteId?: number
+  year?: number
+}
+
+export interface CreateFarmRequest {
+  name: string
+  address: string
+  supervisorId: string
+}
+
+export interface CreateSiteRequest {
+  farmId: number
+  name: string
+  sum: number
+}
+
+export interface FarmNotification {
+  id: number
+  title: string
+  content: string
+  type: number
+  isRead: number
+  createdAt: string
+}
+
+export interface MonthInoutData {
+  month: number
+  sum: number
+  inCount: number
+  outCount: number
 }
 
 export interface CreateDeviceRequest {
@@ -224,7 +253,7 @@ export interface PageParams {
   orderId?: number
 }
 
-export type RequestBody = LoginRequest | RegisterRequest | CreateEnterpriseRequest | JoinEnterpriseRequest | LiveTicketRequest | CreateDeviceRequest | CreateOrderRequest | AcceptOrderRequest
+export type RequestBody = LoginRequest | RegisterRequest | CreateEnterpriseRequest | JoinEnterpriseRequest | LiveTicketRequest | CreateDeviceRequest | CreateOrderRequest | AcceptOrderRequest | CreateFarmRequest | CreateSiteRequest
 
 export function deviceTypeText(type: number): string {
   if (type === 1) {
